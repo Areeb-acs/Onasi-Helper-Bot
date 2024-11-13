@@ -41,7 +41,7 @@ def load_word_documents_with_docx(folder_path):
     print(f"Loaded {len(all_documents)} documents from Word files in {folder_path}.")
     return all_documents
 
-def load_json_documents(file_paths):
+def load_json_documents(folder_path):
     """
     Load and process JSON files into a list of Document objects.
 
@@ -53,7 +53,8 @@ def load_json_documents(file_paths):
     """
     combined_json_documents = []
 
-    for file_path in file_paths:
+    for file_path in os.listdir(folder_path):
+        file_path = os.path.join(folder_path, file_path)
         try:
             # Read JSON file
             data = pd.read_json(file_path)
@@ -90,8 +91,8 @@ def ingest_docs():
         print(f"Metadata: {doc.metadata}, Content: {doc.page_content[:100]}")
     
     # Load JSON Files
-    file_paths = ["./Medical_coding.json", "./Nphies_validation.json"]
-    json_documents = load_json_documents(file_paths)
+    folder_path = "./JSON_Documents"
+    json_documents = load_json_documents(folder_path)
 
     # Output metadata and content for verification
     for doc in json_documents[:5]:  # Display first 5 documents
