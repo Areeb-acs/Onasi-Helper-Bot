@@ -1,0 +1,5 @@
+/DHIS_documents
+/JSON_documents
+*.pdf
+*.env
+*.docx
