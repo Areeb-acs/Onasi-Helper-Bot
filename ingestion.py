@@ -6,40 +6,12 @@ import pandas as pd
 import json
 from langchain_openai import OpenAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
-from docx import Document as DocxDocument
 import pandas as pd
 import os
 
 embeddings = OpenAIEmbeddings()
 
 
-def load_word_documents_with_docx(folder_path):
-    all_documents = []
-    
-    for file_name in os.listdir(folder_path):
-        if file_name.endswith(".docx"):
-            file_path = os.path.join(folder_path, file_name)
-            
-            try:
-                # Load Word document content
-                docx = DocxDocument(file_path)
-                full_text = []
-                for para in docx.paragraphs:
-                    full_text.append(para.text)
-                page_content = "\n".join(full_text)
-                
-                # Create LangChain Document
-                all_documents.append(
-                    Document(
-                        page_content=page_content,
-                        metadata={"file_type": "docx", "source": file_name}
-                    )
-                )
-            except Exception as e:
-                print(f"Error loading {file_name}: {e}")
-    
-    print(f"Loaded {len(all_documents)} documents from Word files in {folder_path}.")
-    return all_documents
 
 def load_json_documents(folder_path):
     """
@@ -73,22 +45,64 @@ def load_json_documents(folder_path):
     print(f"Loaded {len(combined_json_documents)} documents from JSON files.")
     return combined_json_documents
 
+def load_pdf_documents(folder_path):
+    """
+    Load and process all PDF files from the specified folder.
 
+    This function iterates through all PDF files in the provided folder, extracts their content
+    using the PyPDFLoader, and updates each document with relevant metadata such as file type
+    and source file name.
+
+    Args:
+        folder_path (str): The path to the folder containing PDF files.
+
+    Returns:
+        list[Document]: A list of Document objects containing the content and metadata of all
+        processed PDF files.
+
+    Example:
+        folder_path = "./PDF_Docs"
+        documents = load_pdf_documents(folder_path)
+        print(f"Total documents processed: {len(documents)}")
+    """
+    # Initialize a list to store all documents
+    all_pdf_documents = []
+
+    # Ensure the folder path exists
+    if not os.path.exists(folder_path):
+        raise FileNotFoundError(f"The folder path {folder_path} does not exist.")
+
+    # Iterate through each file in the folder
+    for file_name in os.listdir(folder_path):
+        if file_name.endswith(".pdf"):  # Process only PDF files
+            file_path = os.path.join(folder_path, file_name)
+            
+            # Load PDF file
+            pdf_loader = PyPDFLoader(file_path)
+            pdf_documents = pdf_loader.load()
+            
+            # Add metadata to each document
+            for doc in pdf_documents:
+                doc.metadata.update({"file_type": "pdf", "source": file_name})
+            
+            # Add documents to the main list
+            all_pdf_documents.extend(pdf_documents)
+            print(f"Loaded {len(pdf_documents)} documents from {file_name}.")
+
+    print(f"Total {len(all_pdf_documents)} documents loaded from all PDFs.")
+
+    # Return or process the combined documents as needed
+    return all_pdf_documents
 
 def ingest_docs():
     # Load PDF file
-    pdf_loader = PyPDFLoader("./Onasi_RCM.pdf")
-    pdf_documents = pdf_loader.load()
-    for doc in pdf_documents:
-        doc.metadata.update({"file_type": "pdf", "source": "Onasi_RCM.pdf"})
-    print(f"Loaded {len(pdf_documents)} documents from PDF.")
+    folder_path = "./PDF_Docs"  # Path to the folder containing Word docs
+    pdf_documents = load_pdf_documents(folder_path)
     
-    # Example usage
-    folder_path = "./DHIS_documents"  # Path to the folder containing Word docs
-    word_documents = load_word_documents_with_docx(folder_path)
-    # Output metadata and content for verification
-    for doc in word_documents[:5]:
+    
+    for doc in pdf_documents[:5]:
         print(f"Metadata: {doc.metadata}, Content: {doc.page_content[:100]}")
+
     
     # Load JSON Files
     folder_path = "./JSON_Documents"
@@ -99,10 +113,10 @@ def ingest_docs():
         print(f"Metadata: {doc.metadata}, Content: {doc.page_content[:100]}")
     
     # Combine all documents
-    all_documents = pdf_documents + json_documents + word_documents
+    all_documents = pdf_documents + json_documents 
 
     # Split documents into chunks for embedding, using specified chunk size and overlap
-    text_splitter  = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=400)
+    text_splitter  = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=200)
 
     split_documents = []
     for doc in all_documents:
