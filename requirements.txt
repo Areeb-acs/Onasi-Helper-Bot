@@ -14,3 +14,4 @@ pinecone
 ijson
 uvicorn
 fastapi
+langchain-pinecone
