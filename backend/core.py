@@ -20,43 +20,59 @@ INDEX_NAME = "rcm-final-app"
 embeddings = OpenAIEmbeddings()
 
 groq_api_key = os.getenv("GROQ_API_KEY")
+# Initialize Pinecone
+docsearch = PineconeVectorStore(index_name=INDEX_NAME, embedding=embeddings)
+
+def extract_numbers_from_query(query):
+    """
+    Extract numbers from the query using regex.
+    """
+    return list(map(int, re.findall(r'\b\d+\b', query)))
+
+def get_all_documents(vector_store):
+    """
+    Retrieve all documents from the Pinecone vector store.
+    """
+    retriever = vector_store.as_retriever()
+    all_docs = retriever.get_relevant_documents("")  # Retrieve all documents
+    return all_docs  # Ensure these are Document objects
 
 
-def retrieve_relevant_chunks(question, docsearch, num_chunks=10, file_type=None):
-    import re
+def rule_based_search(query, vector_store, num_chunks=10):
+    """
+    Perform rule-based search on all documents retrieved from the vector store.
+    """
+    # Extract numbers or rule ID from the query
+    numbers_in_query = extract_numbers_from_query(query)
+    rule_id_match = re.search(r"BV-\d{5}", query)  # Adjust regex for your Rule ID format
 
-    # Extract numbers and Rule IDs from the query
-    numbers_in_query = re.findall(r'\d+', question)  # Extract all numbers
-    rule_id_match = re.search(r'\bBV-\d+\b', question)  # Match Rule IDs like "BV-00027"
+    # Retrieve all documents from the vector store
+    final_documents = get_all_documents(vector_store)
 
-    matches = []  # Initialize an empty list to hold all matches
-
-    # Check for exact match search based on Rule ID
+    # Check for Rule ID match
     if rule_id_match:
-        rule_id_to_search = rule_id_match.group(0)  # Extract the matched Rule ID
-        rule_id_matches = docsearch.similarity_search(rule_id_to_search, k=num_chunks)
-   
-        matches.extend(rule_id_matches)  # Add Rule ID matches to the results list
+        rule_id_to_search = rule_id_match.group(0)  # Extract matched Rule ID
+        matches = [
+            doc
+            for doc in final_documents
+            if rule_id_to_search in doc.page_content  # Check if the Rule ID exists in the page content
+        ]
+        if matches:
+            return matches[:num_chunks]  # Return top 'num_chunks' matches
 
     # Check for exact match search based on numbers
     if numbers_in_query:
-        for number in numbers_in_query:  # Iterate through all numbers found
-            number_matches = docsearch.similarity_search(number, k=num_chunks)
-            
-            # Filter results to ensure the exact number is present in the content
-            exact_matches = [
-                match for match in number_matches if str(number) in match.page_content
-            ]
-            
-            # Debugging: Print the exact matches for verification
-            print(f"Exact matches for number {number}: {exact_matches}")
+        number_to_search = str(numbers_in_query[0])  # Convert to string for comparison
+        matches = [
+            doc
+            for doc in final_documents
+            if number_to_search in doc.page_content  # Check if the number exists in the page content
+        ]
+        if matches:
+            return matches[:num_chunks]  # Return top 'num_chunks' matches
 
-            # Add the exact matches to the results list
-            matches.extend(exact_matches)
-
-
-    # Concatenate all retrieved document contents into a single string
-    return matches
+    # If no matches found, return an empty list
+    return []
 
 
 # Define a function to run the LLM query pipeline
@@ -75,7 +91,7 @@ def run_llm(query: str, chat_history):
     # `ChatOpenAI` initializes a chat-based language model with the specified parameters.
     # `verbose=True` ensures that additional processing details are logged for debugging.
     # `temperature=0` controls the randomness of the responses; a lower value makes outputs more deterministic.
-    chat = ChatOpenAI(verbose=True, temperature=0)
+    chat = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-8b-8192")
 
     # Retrieve a prebuilt prompt template for retrieval-based question answering (QA).
     # This is done using `hub.pull`, which fetches a predefined prompt template from LangChain's repository.
@@ -86,9 +102,8 @@ def run_llm(query: str, chat_history):
     You are a friendly conversational chatbot that remembers context across a conversation. Use the provided conversation history and context only to understand the user's question and provide clear, concise, and accurate responses for doctors.
 
     Instructions:
-    1. Always refer to the conversation history for context and maintain continuity in your responses, only answer based on given context.
-    2. Answer questions in plain English and ensure your response is easy to understand for a doctor.
-    3. If user asks for password and username, do not share, say "I am not allowed to share this information"
+    1. Answer questions in plain English and ensure your response is easy to understand for a doctor.
+    2. If user asks for password and username, do not share, say "I am not allowed to share this information"
     3. When asked to summarize, base the summary only on the relevant details from the conversation history. Ignore any newly retrieved chunks or external context for summarization tasks.
     4. For requests like "summarize the above information," focus only on the most recent exchanges in the conversation history. Extract and condense the key points into a concise response.
     5. When answering non-summarization queries, you may use the retrieved context along with the conversation history to provide accurate and complete responses.
@@ -129,19 +144,27 @@ def run_llm(query: str, chat_history):
     # Create a document combination chain using the retrieved prompt and LLM.
     # `create_stuff_documents_chain` combines multiple document results into a single cohesive response.
     # The `chat` is the LLM used for response generation, and the `retrieval_qa_chat_promot` is the template guiding how responses are structured.
+    
+    result = rule_based_search(query, docsearch, num_chunks=5)
+        # Format the retrieved chunks as additional context
+    additional_context = "\n".join([doc.page_content for doc in result])
+    
+    
     stuff_documents_chain = create_stuff_documents_chain(chat, retrieval_qa_chat_prompt)
-
+    # Append the additional context to the query
+    query_with_context = f"{query}\n\nAdditional Context:\n{additional_context}"
     # Build a retrieval-based QA chain.
     # This chain first retrieves relevant documents from the Pinecone vector store using the `docsearch` retriever.
     # Then it uses the `stuff_documents_chain` to combine these documents into a single, coherent answer.
     qa = create_retrieval_chain(retriever=history_aware_retriever, combine_docs_chain=stuff_documents_chain)
+    
+
     # Process query
     # Run the query through the QA chain.
     # The `invoke` method takes an input query and processes it through the chain.
     # The result contains the final response generated by the model.
     # Retrieve relevant chunks using exact matching
     # similar_matches = retrieve_relevant_chunks(query, docsearch, num_chunks=10)
-
     # # Process `similar_matches` to extract text content
     # similar_matches_content = [match.page_content for match in similar_matches]
     # Append the processed `similar_matches_content` to the `chat_history`
@@ -155,7 +178,7 @@ def run_llm(query: str, chat_history):
     
     # Invoke the QA chain
     result = qa.invoke({
-        "input": query,
+        "input": query_with_context,
         "chat_history": chat_history,
     })
 

@@ -99,17 +99,14 @@ def ingest_docs():
         print(f"Metadata: {doc.metadata}, Content: {doc.page_content[:100]}")
     
     # Combine all documents
-    all_documents = pdf_documents + json_documents
+    all_documents = pdf_documents + json_documents + word_documents
 
     # Split documents into chunks for embedding, using specified chunk size and overlap
     text_splitter  = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=400)
 
     split_documents = []
     for doc in all_documents:
-        if len(doc.page_content) > 500:
-            split_documents.extend(text_splitter.split_documents([doc]))
-        else:
-            split_documents.append(doc)
+        split_documents.extend(text_splitter.split_documents([doc]))
 
     print(f"Going to add {len(split_documents)} to Pinecone")
     for doc in split_documents:
