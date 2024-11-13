@@ -36,6 +36,12 @@ if st.session_state["chat_answers_history"]:
     for i, (generated_response, user_query) in enumerate(
         zip(st.session_state["chat_answers_history"], st.session_state["user_prompt_history"])
     ):
-        # Add unique keys for each message
-        message(user_query, is_user=True, key=f"user_message_{i}")
-        message(generated_response, is_user=False, key=f"ai_message_{i}")
+        # Define custom logos for user and AI
+        user_logo = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTtuphMb4mq-EcVWhMVT8FCkv5dqZGgvn_QiA&s"  # Updated direct link
+        ai_logo = "https://cdn-icons-png.flaticon.com/512/3774/3774299.png"
+
+        # Display user query with custom logo
+        message(user_query, is_user=True, logo=user_logo, key=f"user_message_{i}")
+
+        # Display AI response without a logo
+        message(generated_response, is_user=False, logo=ai_logo, key=f"ai_message_{i}")
