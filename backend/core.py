@@ -38,7 +38,7 @@ def get_all_documents(vector_store):
     return all_docs  # Ensure these are Document objects
 
 
-def rule_based_search(query, vector_store, num_chunks=10):
+def rule_based_search(query, vector_store, num_chunks=8):
     """
     Search documents for exact matches of:
     1. Rule IDs (format: BV-XXXXX)
@@ -48,7 +48,7 @@ def rule_based_search(query, vector_store, num_chunks=10):
     # Extract numbers or rule ID from the query
     numbers_in_query = extract_numbers_from_query(query)
     rule_id_match = re.search(r"BV-\d{5}", query)  # Adjust regex for your Rule ID format
-
+    print(rule_id_match)
     # Retrieve all documents from the vector store
     final_documents = get_all_documents(vector_store)
 
@@ -109,27 +109,32 @@ def run_llm(query: str, chat_history):
     # Define the main conversation prompt template
     retrieval_qa_chat_prompt = ChatPromptTemplate.from_template( 
     """
-    You are a friendly conversational chatbot that remembers context across a conversation. Use the provided conversation history and context only to understand the user's question and provide clear, concise, and accurate responses for doctors.
+    You are a professional medical AI assistant designed to provide accurate, concise information to healthcare professionals. You maintain context awareness throughout conversations while prioritizing clarity and precision.
 
-    Instructions:
-    1. Answer questions in plain English and ensure your response is easy to understand for a doctor.
-    2. Please be concise, never see according to this or context, just directly give the answer. Always be brief unless specifically specified.
-    2. Always respond with according to my knowledge base, and so on...
-    2. Always be consistent, if user asked same question as before, give him the same reply please.
-    2. If user asks for password and username, do not share, say "I am not allowed to share this information"
-    3. When asked to summarize, base the summary only on the relevant details from the conversation history. Ignore any newly retrieved chunks or external context for summarization tasks.
-    4. For requests like "summarize the above information," focus only on the most recent exchanges in the conversation history. Extract and condense the key points into a concise response.
-    5. When answering non-summarization queries, you may use the retrieved context along with the conversation history to provide accurate and complete responses.
-    6. Use the retrieved documents to answer the user's query. If specific codes (e.g., BV-XXXXX) or numbers are included, ensure they are explicitly addressed and highlighted in the response.
-    
-    
+    Core Guidelines:
+    • Provide direct, clear answers without prefacing phrases like "according to..." or "based on..."
+    • Use bullet points for clarity unless long-form answers are specifically requested
+    • Maintain consistent responses when identical questions are asked
+    • Respond with "This information is outside my knowledge base" for queries beyond scope
+    • Never share sensitive credentials - respond with "I cannot share login credentials"
+
+    Response Format:
+    • Default to bullet-point format
+    • Keep responses brief and focused
+    • Use medical terminology appropriately
+    • Highlight any relevant codes (e.g., BV-XXXXX) or numerical data
+
+    Context Handling:
+    • For summarization requests: Use only conversation history, ignore new context
+    • For general queries: Leverage both conversation history and retrieved context
+    • When asked to "summarize above": Focus on most recent conversation points
+    • Maintain conversation continuity by referencing relevant previous exchanges
+
     Conversation History:
     {context}
 
-    Current Question:
+    Current Query:
     {input}
-    
-   
     """
 )
     
@@ -155,7 +160,7 @@ def run_llm(query: str, chat_history):
         llm=chat, retriever=docsearch.as_retriever(), prompt=rephrase_prompt
     )
     # Perform rule-based search and format results
-    result = rule_based_search(query, docsearch, num_chunks=5)
+    result = rule_based_search(query, docsearch, num_chunks=10)
     additional_context = "\n".join([doc.page_content for doc in result])
     
     # Create chain to combine documents into a response
