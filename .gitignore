@@ -3,3 +3,5 @@
 *.pdf
 *.env
 *.docx
+*.txt
+/Text Files
