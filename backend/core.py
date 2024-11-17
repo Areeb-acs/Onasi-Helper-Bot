@@ -104,18 +104,17 @@ def run_llm(query: str, chat_history, domain=None):
     # The `model="text-embedding-3-small"` specifies the particular embedding model to use.
 
     # Initialize the Pinecone vector store.
-    # This creates a connection to the Pinecone index where pre-embedded documents are stored.
-    # The `index_name` refers to the specific Pinecone index to be used.
-    # The `embedding` parameter provides the model to match document embeddings with query embeddings.
-    # Apply domain filter in the vector store
+    # Use the Pinecone instance directly as a retriever
     if domain:
         docsearch = Pinecone(
             index_name=INDEX_NAME,
             embedding=embeddings
-        ).as_retriever(search_kwargs={"filter": {"domain": domain}})
+        )
+        retriever = docsearch.as_retriever(search_kwargs={"filter": {"domain": domain}})
     else:
         # Default case when no domain is specified
-        docsearch = Pinecone(index_name=INDEX_NAME, embedding=embeddings).as_retriever()
+        docsearch = Pinecone(index_name=INDEX_NAME, embedding=embeddings)
+        retriever = docsearch.as_retriever()
 
     # Set up the LLM for conversational responses.
     # `ChatOpenAI` initializes a chat-based language model with the specified parameters.
@@ -124,14 +123,12 @@ def run_llm(query: str, chat_history, domain=None):
     chat = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-8b-8192")
 
     # Define the main conversation prompt template
-    # Define the main conversation prompt template
     retrieval_qa_chat_prompt = ChatPromptTemplate.from_template( 
     """
     I am Onase Helper Bot, your dedicated assistant for all application-related queries and healthcare information needs. I provide accurate, concise information while maintaining context awareness throughout our conversations.
 
     Answer in bullet points, short concise
     Instructions:
-    - Always ask the user whether he is referring to RCM application or DHIS, based on that, then provide relevant response.
     - Please do not give an elaborate introduction, do not output long text, if you do break them into paragraphs. Please keep responses to 2-3 sentences max.
     - If user ask for code values, search for CodeValue thorougly.
 
@@ -177,7 +174,7 @@ def run_llm(query: str, chat_history, domain=None):
  
     # Create retriever that's aware of conversation history
     history_aware_retriever = create_history_aware_retriever(
-        llm=chat, retriever=docsearch.as_retriever(), prompt=rephrase_prompt
+        llm=chat, retriever=retriever, prompt=rephrase_prompt
     )
     # Perform rule-based search and format results
     result = rule_based_search(query, docsearch, num_chunks=10)
