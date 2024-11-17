@@ -155,17 +155,17 @@ def ingest_docs():
 
     # Load Text Files
     text_folder_path = "./Text Files"
-    text_documents = load_text_documents(text_folder_path)
+    # text_documents = load_text_documents(text_folder_path)
     
     # Output metadata and content for verification
     for doc in json_documents[:5]:
         print(f"Metadata: {doc.metadata}, Content: {doc.page_content[:100]}")
     
     # Combine all documents
-    all_documents = pdf_documents + text_documents
+    all_documents = pdf_documents + json_documents
 
     # Split documents into chunks for embedding, using specified chunk size and overlap
-    text_splitter  = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=200)
+    text_splitter  = RecursiveCharacterTextSplitter(chunk_size=1500, chunk_overlap=500)
 
     split_documents = []
     for doc in all_documents:

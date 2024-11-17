@@ -49,39 +49,38 @@ def rule_based_search(query, vector_store, num_chunks=5, file_type=None):
     numbers_in_query = extract_numbers_from_query(query)
     rule_id_match = re.search(r"BV-\d{5}", query)  # Adjust regex for your Rule ID format
     print(rule_id_match)
+
     # Retrieve all documents from the vector store
     final_documents = get_all_documents(vector_store)
+    matches = []
 
     # Check for Rule ID match
     if rule_id_match:
         rule_id_to_search = rule_id_match.group(0)  # Extract matched Rule ID
-        matches = [
-            doc
-            for doc in final_documents
-            if rule_id_to_search in doc.page_content  # Check if the Rule ID exists in the page content
+        rule_matches = [
+            doc for doc in final_documents if rule_id_to_search in doc.page_content
         ]
-        if matches:
-            return matches[:num_chunks]  # Return top 'num_chunks' matches
+        matches.extend(rule_matches[:num_chunks])
 
     # Check for exact match search based on numbers
     if numbers_in_query:
         number_to_search = str(numbers_in_query[0])  # Convert to string for comparison
-        matches = [
-            doc
-            for doc in final_documents
-            if number_to_search in doc.page_content  # Check if the number exists in the page content
+        number_matches = [
+            doc for doc in final_documents if number_to_search in doc.page_content
         ]
-        if matches:
-            return matches[:num_chunks]  # Return top 'num_chunks' matches
+        matches.extend(number_matches[:num_chunks])
+
     # Fall back to embedding-based search for more complex queries
-    retriever = docsearch.as_retriever(search_kwargs={"k": num_chunks})
-    if file_type:
-        retriever = docsearch.as_retriever(
-            search_kwargs={"k": num_chunks, "filter": {"file_type": file_type}}
-        )
-    similar_docs = retriever.invoke(query)
-    matches = [match["metadata"].get("page_content", "") for match in similar_docs["matches"]]
-    return "\n".join(matches)
+    retriever = vector_store.as_retriever(search_kwargs={"k": num_chunks})
+    similar_docs = retriever.get_relevant_documents(query)
+
+    # Ensure embedding-based matches are added properly
+    embedding_matches = [doc for doc in similar_docs if hasattr(doc, "page_content")]
+    matches.extend(embedding_matches)
+    
+    # Return the matches
+    return matches
+
 
 
 # Define a function to run the LLM query pipeline
