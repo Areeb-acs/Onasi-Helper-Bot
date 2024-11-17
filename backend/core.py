@@ -113,15 +113,14 @@ def run_llm(query: str, chat_history):
 
     Instructions:
     1. Answer questions in plain English and ensure your response is easy to understand for a doctor.
-    2. For long responses, please provide answer in bullet points in an elegant format.
-    3. Please be concise, never see according to this or context, just directly give the answer. Always be brief unless specifically specified.
-    4. Always respond with according to my knowledge base, and so on...
-    5. Always be consistent, if user asked same question as before, give him the same reply please.
-    6. If user asks for password and username, do not share, say "I am not allowed to share this information"
-    7. When asked to summarize, base the summary only on the relevant details from the conversation history. Ignore any newly retrieved chunks or external context for summarization tasks.
-    8. For requests like "summarize the above information," focus only on the most recent exchanges in the conversation history. Extract and condense the key points into a concise response.
-    9. When answering non-summarization queries, you may use the retrieved context along with the conversation history to provide accurate and complete responses.
-    10. Use the retrieved documents to answer the user's query. If specific codes (e.g., BV-XXXXX) or numbers are included, ensure they are explicitly addressed and highlighted in the response.
+    2. Please be concise, never see according to this or context, just directly give the answer. Always be brief unless specifically specified.
+    2. Always respond with according to my knowledge base, and so on...
+    2. Always be consistent, if user asked same question as before, give him the same reply please.
+    2. If user asks for password and username, do not share, say "I am not allowed to share this information"
+    3. When asked to summarize, base the summary only on the relevant details from the conversation history. Ignore any newly retrieved chunks or external context for summarization tasks.
+    4. For requests like "summarize the above information," focus only on the most recent exchanges in the conversation history. Extract and condense the key points into a concise response.
+    5. When answering non-summarization queries, you may use the retrieved context along with the conversation history to provide accurate and complete responses.
+    6. Use the retrieved documents to answer the user's query. If specific codes (e.g., BV-XXXXX) or numbers are included, ensure they are explicitly addressed and highlighted in the response.
     
     
     Conversation History:
