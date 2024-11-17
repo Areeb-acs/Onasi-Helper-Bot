@@ -21,9 +21,21 @@ if (
 
 
 if prompt: 
+    # Determine the domain based on the content of the prompt
+    if "RCM" in prompt:
+        domain = "RCM"
+    elif "DHIS" in prompt:
+        domain = "DHIS"
+    else:
+        domain = None  # Default if no domain-specific keyword is found
+    
     with st.spinner("Generating response..."):
-        
-        generated_response = run_llm(query=prompt, chat_history=st.session_state["chat_history"])
+        # Pass the domain to run_llm
+        generated_response = run_llm(
+            query=prompt,
+            chat_history=st.session_state["chat_history"],
+            domain=domain
+        )
         formatted_response = f"{generated_response['answer']}"
         
         st.session_state["user_prompt_history"].append(prompt)

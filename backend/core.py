@@ -17,7 +17,7 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
 
 INDEX_NAME = "rcm-final-app"
-embeddings = OpenAIEmbeddings()
+embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")
 
 groq_api_key = os.getenv("GROQ_API_KEY")
 # Initialize Pinecone
@@ -37,7 +37,7 @@ def get_all_documents(vector_store):
     all_docs = retriever.get_relevant_documents("")  # Retrieve all documents
     return all_docs  # Ensure these are Document objects
 
-def rule_based_search(query, vector_store, num_chunks=20, file_type=None):
+def rule_based_search(query, vector_store, num_chunks=10, file_type=None, domain=None):
     """
     Search documents for exact matches of:
     1. Rule IDs (format: BV-XXXXX)
@@ -69,10 +69,14 @@ def rule_based_search(query, vector_store, num_chunks=20, file_type=None):
             doc for doc in final_documents if number_to_search in doc.page_content
         ]
         matches.extend(number_matches[:num_chunks])
-
-    # Fall back to embedding-based search for more complex queries
-    retriever = vector_store.as_retriever(search_kwargs={"k": num_chunks})
-    similar_docs = retriever.get_relevant_documents(query)
+    # Check if domain is set and retrieve results accordingly
+    if domain:
+        retriever = vector_store.as_retriever(search_kwargs={"k": num_chunks, "filter": {"domain": domain}})
+        similar_docs = retriever.get_relevant_documents(query)
+    else:
+        # Fall back to embedding-based search for more complex queries
+        retriever = vector_store.as_retriever(search_kwargs={"k": num_chunks})
+        similar_docs = retriever.get_relevant_documents(query)
 
     # Ensure embedding-based matches are added properly
     embedding_matches = [doc for doc in similar_docs if hasattr(doc, "page_content")]
@@ -84,7 +88,7 @@ def rule_based_search(query, vector_store, num_chunks=20, file_type=None):
 
 
 # Define a function to run the LLM query pipeline
-def run_llm(query: str, chat_history):
+def run_llm(query: str, chat_history, domain=None):
     """
     Main pipeline for processing user queries:
     1. Sets up vector store and LLM (Groq)
@@ -103,7 +107,16 @@ def run_llm(query: str, chat_history):
     # This creates a connection to the Pinecone index where pre-embedded documents are stored.
     # The `index_name` refers to the specific Pinecone index to be used.
     # The `embedding` parameter provides the model to match document embeddings with query embeddings.
-    docsearch = Pinecone(index_name=INDEX_NAME, embedding=embeddings)
+    # Apply domain filter in the vector store
+    if domain:
+        docsearch = Pinecone(
+            index_name=INDEX_NAME,
+            embedding=embeddings,
+            search_kwargs={"filter": {"domain": domain}}
+        )
+    else:
+        # Default case when no domain is specified
+        docsearch = Pinecone(index_name=INDEX_NAME, embedding=embeddings)
 
     # Set up the LLM for conversational responses.
     # `ChatOpenAI` initializes a chat-based language model with the specified parameters.
@@ -119,6 +132,7 @@ def run_llm(query: str, chat_history):
 
     Answer in bullet points, short concise
     Instructions:
+    - Always ask the user whether he is referring to RCM application or DHIS, based on that, then provide relevant response.
     - Please do not give an elaborate introduction, do not output long text, if you do break them into paragraphs. Please keep responses to 2-3 sentences max.
     - If user ask for code values, search for CodeValue thorougly.
 
