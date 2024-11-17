@@ -94,26 +94,75 @@ def load_pdf_documents(folder_path):
     # Return or process the combined documents as needed
     return all_pdf_documents
 
+def load_text_documents(folder_path):
+    """
+    Load and process text files from the specified folder.
+
+    Args:
+        folder_path (str): The path to the folder containing text files.
+
+    Returns:
+        list[Document]: A list of Document objects containing the content and metadata of all
+        processed text files.
+
+    Example:
+        folder_path = "./Text_Files"
+        documents = load_text_documents(folder_path)
+        print(f"Total documents processed: {len(documents)}")
+    """
+    text_documents = []
+
+    # Ensure the folder path exists
+    if not os.path.exists(folder_path):
+        raise FileNotFoundError(f"The folder path {folder_path} does not exist.")
+
+    # Iterate through each file in the folder
+    for file_name in os.listdir(folder_path):
+        if file_name.endswith(('.txt', '.text')):  # Process only text files
+            file_path = os.path.join(folder_path, file_name)
+            
+            try:
+                # Read the text file
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    content = file.read()
+                
+                # Create a Document object with the content and metadata
+                text_documents.append(
+                    Document(
+                        page_content=content,
+                        metadata={"file_type": "text", "source": file_name}
+                    )
+                )
+                print(f"Loaded document from {file_name}.")
+                
+            except Exception as e:
+                print(f"Error processing text file {file_path}: {e}")
+
+    print(f"Total {len(text_documents)} documents loaded from all text files.")
+    return text_documents
+
 def ingest_docs():
-    # Load PDF file
-    folder_path = "./PDF_Docs"  # Path to the folder containing Word docs
-    pdf_documents = load_pdf_documents(folder_path)
-    
+    # Load PDF files
+    pdf_folder_path = "./PDF_Docs"
+    pdf_documents = load_pdf_documents(pdf_folder_path)
     
     for doc in pdf_documents[:5]:
         print(f"Metadata: {doc.metadata}, Content: {doc.page_content[:100]}")
 
-    
     # Load JSON Files
-    folder_path = "./JSON_Documents"
-    json_documents = load_json_documents(folder_path)
+    json_folder_path = "./JSON_Documents"
+    json_documents = load_json_documents(json_folder_path)
 
+    # Load Text Files
+    text_folder_path = "./Text Files"
+    text_documents = load_text_documents(text_folder_path)
+    
     # Output metadata and content for verification
-    for doc in json_documents[:5]:  # Display first 5 documents
+    for doc in json_documents[:5]:
         print(f"Metadata: {doc.metadata}, Content: {doc.page_content[:100]}")
     
     # Combine all documents
-    all_documents = pdf_documents + json_documents 
+    all_documents = pdf_documents + text_documents
 
     # Split documents into chunks for embedding, using specified chunk size and overlap
     text_splitter  = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=200)
