@@ -5,18 +5,23 @@ from langchain_community.document_loaders import PyPDFLoader
 import pandas as pd
 import json
 from langchain_openai import OpenAIEmbeddings
-from pinecone import Pinecone
+from langchain_pinecone import PineconeVectorStore
 import os
+from pinecone import Pinecone, ServerlessSpec
 
 # Load environment variables from .env file
 load_dotenv()
 
-# Initialize Pinecone
-pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))  # Use the API key from environment variables
-index_name = "rcm-final-app"  # Targeting the "quickstart" index
-index = pc.Index(index_name)
+# Create an instance of the Pinecone class
+pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 
-embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")
+# Check if the index exists, and create it if it doesn't
+index_name = "rcm-final-app"  # Your index name
+# Create an instance of the embedding model
+embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")  # Specify the model you want to use
+
+# Now create the PineconeVectorStore with the embedding model
+vector_store = PineconeVectorStore(index_name=index_name, embedding=embeddings)  # Pass the embedding model
 
 def load_json_documents(folder_path):
     """
@@ -123,7 +128,7 @@ def ingest_docs():
     all_documents = pdf_documents + json_documents
 
     # Split documents into chunks for embedding
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=200)
 
     split_documents = []
     for doc in all_documents:
@@ -133,16 +138,12 @@ def ingest_docs():
     for doc in split_documents:
         print(f"Document Metadata: {doc.metadata}, Content Length: {len(doc.page_content)}")
 
-    # Index documents in Pinecone
-    for doc in split_documents:
-        # Get the embedding for the document content
-        embedding_response = embeddings.embed_documents([doc.page_content])
-        embedding_vector = embedding_response[0]  # Extract the first (and only) embedding
+    # Index documents in Pinecone using PineconeVectorStore
+    PineconeVectorStore.from_documents(
+        split_documents, embeddings, index_name="rcm-final-app"
+    )  # Updated indexing method
 
-        # Upsert the document into Pinecone
-        index.upsert([(doc.metadata['source'], embedding_vector, doc.metadata)])
-
-    print("****Loading to Pinecone index done ***")
+    print("****Loading to vectorstore done ***")
 
 if __name__ == "__main__":
     ingest_docs()

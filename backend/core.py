@@ -29,12 +29,21 @@ def extract_numbers_from_query(query):
     """
     return list(map(int, re.findall(r'\b\d+\b', query)))
 
-def get_all_documents(vector_store):
+def get_all_documents(vector_store, domain=None):
     """
     Retrieve all documents from the Pinecone vector store.
     """
-    retriever = vector_store.as_retriever()
-    all_docs = retriever.get_relevant_documents("")  # Retrieve all documents
+
+
+    if domain:
+        retriever = vector_store.as_retriever(search_kwargs={"filter": {"domain": domain}})
+        all_docs = retriever.get_relevant_documents("")  # Retrieve all documents
+    else:
+        # Fall back to embedding-based search for more complex queries
+        retriever = vector_store.as_retriever()
+        all_docs = retriever.get_relevant_documents("")
+    
+
     return all_docs  # Ensure these are Document objects
 
 def rule_based_search(query, vector_store, num_chunks=10, file_type=None, domain=None):
@@ -51,7 +60,7 @@ def rule_based_search(query, vector_store, num_chunks=10, file_type=None, domain
     print(rule_id_match)
 
     # Retrieve all documents from the vector store
-    final_documents = get_all_documents(vector_store)
+    final_documents = get_all_documents(vector_store, domain=domain)
     matches = []
 
     # Check for Rule ID match
@@ -125,27 +134,14 @@ def run_llm(query: str, chat_history, domain=None):
     # Define the main conversation prompt template
     retrieval_qa_chat_prompt = ChatPromptTemplate.from_template( 
     """
-    I am Onase Helper Bot, your dedicated assistant for all application-related queries and healthcare information needs. I provide accurate, concise information while maintaining context awareness throughout our conversations.
+    You are a friendly conversational chatbot that remembers context across a conversation. Use the provided conversation history to understand the user's question and provide clear, concise, and accurate responses for doctors.
 
-    Answer in bullet points, short concise
     Instructions:
-    - Please do not give an elaborate introduction, do not output long text, if you do break them into paragraphs. Please keep responses to 2-3 sentences max.
-    - If user ask for code values, search for CodeValue thorougly.
-
-    Core Guidelines:
-    • I offer direct, clear answers without unnecessary prefacing phrases
-    • I use bullet points for clarity unless detailed explanations are needed
-    • I maintain consistent responses for identical questions
-    • I'll inform you when information is outside my knowledge base
-    • I never share sensitive credentials or login information
-
-    Response Format:
-    * I am always brief, unless specified not too, do not make your responses too wordy, be to the point.
-    • I default to organized bullet points
-    • I keep responses focused and concise
-    • I use appropriate medical and technical terminology
-    • I highlight relevant codes (e.g., BV-XXXXX, CodeValue) and numerical data and provide summary information
-
+    1. Always refer to the conversation history for context and maintain continuity in your responses.
+    2. Answer questions in plain English and ensure your response is easy to understand for a doctor.
+    3. When asked to summarize, base the summary only on the relevant details from the conversation history. Ignore any newly retrieved chunks or external context for summarization tasks.
+    4. For requests like "summarize the above information," focus only on the most recent exchanges in the conversation history. Extract and condense the key points into a concise response.
+    5. When answering non-summarization queries, you may use the retrieved context along with the conversation history to provide accurate and complete responses.
 
     Conversation History:
     {context}
@@ -176,20 +172,20 @@ def run_llm(query: str, chat_history, domain=None):
     history_aware_retriever = create_history_aware_retriever(
         llm=chat, retriever=retriever, prompt=rephrase_prompt
     )
-    # Perform rule-based search and format results
-    result = rule_based_search(query, docsearch, num_chunks=10)
-    additional_context = "\n".join([doc.page_content for doc in result])
+    # # Perform rule-based search and format results
+    # result = rule_based_search(query, docsearch, num_chunks=10)
+    # additional_context = "\n".join([doc.page_content for doc in result])
     
     # Create chain to combine documents into a response
     stuff_documents_chain = create_stuff_documents_chain(chat, retrieval_qa_chat_prompt)
     
     # Combine query with any exact matches found
-    query_with_context = f"{query}\n\nAdditional Context:\n{additional_context}"
+    # query_with_context = f"{query}\n\nAdditional Context:\n{additional_context}"
     
     # Create and execute the final retrieval chain
     qa = create_retrieval_chain(retriever=history_aware_retriever, combine_docs_chain=stuff_documents_chain)
     result = qa.invoke({
-        "input": query_with_context,
+        "input": query,
         "chat_history": chat_history,
     })
 
