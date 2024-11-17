@@ -40,7 +40,10 @@ def get_all_documents(vector_store):
 
 def rule_based_search(query, vector_store, num_chunks=10):
     """
-    Perform rule-based search on all documents retrieved from the vector store.
+    Search documents for exact matches of:
+    1. Rule IDs (format: BV-XXXXX)
+    2. Numbers found in the query
+    Returns up to num_chunks matching documents
     """
     # Extract numbers or rule ID from the query
     numbers_in_query = extract_numbers_from_query(query)
@@ -77,6 +80,16 @@ def rule_based_search(query, vector_store, num_chunks=10):
 
 # Define a function to run the LLM query pipeline
 def run_llm(query: str, chat_history):
+    """
+    Main pipeline for processing user queries:
+    1. Sets up vector store and LLM (Groq)
+    2. Defines conversation prompts
+    3. Performs rule-based search for exact matches
+    4. Creates a retrieval chain that:
+       - Considers chat history
+       - Combines relevant documents
+       - Generates a response using the LLM
+    """
     # Initialize the embedding model to vectorize text.
     # The OpenAIEmbeddings class is used to generate embeddings for both the query and documents.
     # The `model="text-embedding-3-small"` specifies the particular embedding model to use.
@@ -93,16 +106,14 @@ def run_llm(query: str, chat_history):
     # `temperature=0` controls the randomness of the responses; a lower value makes outputs more deterministic.
     chat = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-8b-8192")
 
-    # Retrieve a prebuilt prompt template for retrieval-based question answering (QA).
-    # This is done using `hub.pull`, which fetches a predefined prompt template from LangChain's repository.
-    # retrieval_qa_chat_promot = hub.pull("langchain-ai/retrieval-qa-chat")
-    # rephrase_prompt = hub.pull("langchain-ai/chat-langchain-rephrase")
+    # Define the main conversation prompt template
     retrieval_qa_chat_prompt = ChatPromptTemplate.from_template( 
     """
     You are a friendly conversational chatbot that remembers context across a conversation. Use the provided conversation history and context only to understand the user's question and provide clear, concise, and accurate responses for doctors.
 
     Instructions:
     1. Answer questions in plain English and ensure your response is easy to understand for a doctor.
+    2. Please be concise, never see according to this or context, just directly give the answer. Always be brief unless specifically specified.
     2. Always respond with according to my knowledge base, and so on...
     2. Always be consistent, if user asked same question as before, give him the same reply please.
     2. If user asks for password and username, do not share, say "I am not allowed to share this information"
@@ -123,7 +134,7 @@ def run_llm(query: str, chat_history):
 )
     
     
-        # rephrase_prompt = hub.pull("langchain-ai/chat-langchain-rephrase")
+        # Define prompt for rephrasing follow-up questions
     rephrase_prompt = ChatPromptTemplate.from_template( 
     """
     Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question.
@@ -139,33 +150,26 @@ def run_llm(query: str, chat_history):
     """
     )
  
-    #
+    # Create retriever that's aware of conversation history
     history_aware_retriever = create_history_aware_retriever(
         llm=chat, retriever=docsearch.as_retriever(), prompt=rephrase_prompt
     )
-    # Create a document combination chain using the retrieved prompt and LLM.
-    # `create_stuff_documents_chain` combines multiple document results into a single cohesive response.
-    # The `chat` is the LLM used for response generation, and the `retrieval_qa_chat_promot` is the template guiding how responses are structured.
-    
+    # Perform rule-based search and format results
     result = rule_based_search(query, docsearch, num_chunks=5)
-        # Format the retrieved chunks as additional context
     additional_context = "\n".join([doc.page_content for doc in result])
     
-    
+    # Create chain to combine documents into a response
     stuff_documents_chain = create_stuff_documents_chain(chat, retrieval_qa_chat_prompt)
-    # Append the additional context to the query
-    query_with_context = f"{query}\n\nAdditional Context:\n{additional_context}"
-    # Build a retrieval-based QA chain.
-    # This chain first retrieves relevant documents from the Pinecone vector store using the `docsearch` retriever.
-    # Then it uses the `stuff_documents_chain` to combine these documents into a single, coherent answer.
-    qa = create_retrieval_chain(retriever=history_aware_retriever, combine_docs_chain=stuff_documents_chain)
     
-    # Invoke the QA chain
+    # Combine query with any exact matches found
+    query_with_context = f"{query}\n\nAdditional Context:\n{additional_context}"
+    
+    # Create and execute the final retrieval chain
+    qa = create_retrieval_chain(retriever=history_aware_retriever, combine_docs_chain=stuff_documents_chain)
     result = qa.invoke({
         "input": query_with_context,
         "chat_history": chat_history,
     })
-
 
     # Print the result for debugging purposes.
     # print(result)
