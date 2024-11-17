@@ -111,12 +111,11 @@ def run_llm(query: str, chat_history, domain=None):
     if domain:
         docsearch = Pinecone(
             index_name=INDEX_NAME,
-            embedding=embeddings,
-            search_kwargs={"filter": {"domain": domain}}
-        )
+            embedding=embeddings
+        ).as_retriever(search_kwargs={"filter": {"domain": domain}})
     else:
         # Default case when no domain is specified
-        docsearch = Pinecone(index_name=INDEX_NAME, embedding=embeddings)
+        docsearch = Pinecone(index_name=INDEX_NAME, embedding=embeddings).as_retriever()
 
     # Set up the LLM for conversational responses.
     # `ChatOpenAI` initializes a chat-based language model with the specified parameters.
