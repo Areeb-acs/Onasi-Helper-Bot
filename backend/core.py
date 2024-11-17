@@ -10,7 +10,7 @@ import os
 
 from langchain import hub
 from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain_pinecone import PineconeVectorStore
+from langchain_pinecone import Pinecone
 from langchain_groq import ChatGroq
 
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
@@ -21,7 +21,7 @@ embeddings = OpenAIEmbeddings()
 
 groq_api_key = os.getenv("GROQ_API_KEY")
 # Initialize Pinecone
-docsearch = PineconeVectorStore(index_name=INDEX_NAME, embedding=embeddings)
+docsearch = Pinecone(index_name=INDEX_NAME, embedding=embeddings)
 
 def extract_numbers_from_query(query):
     """
@@ -98,7 +98,7 @@ def run_llm(query: str, chat_history):
     # This creates a connection to the Pinecone index where pre-embedded documents are stored.
     # The `index_name` refers to the specific Pinecone index to be used.
     # The `embedding` parameter provides the model to match document embeddings with query embeddings.
-    docsearch = PineconeVectorStore(index_name=INDEX_NAME, embedding=embeddings)
+    docsearch = Pinecone(index_name=INDEX_NAME, embedding=embeddings)
 
     # Set up the LLM for conversational responses.
     # `ChatOpenAI` initializes a chat-based language model with the specified parameters.
