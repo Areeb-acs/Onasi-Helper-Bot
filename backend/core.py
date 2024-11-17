@@ -37,13 +37,13 @@ def get_all_documents(vector_store):
     all_docs = retriever.get_relevant_documents("")  # Retrieve all documents
     return all_docs  # Ensure these are Document objects
 
-
-def rule_based_search(query, vector_store, num_chunks=8):
+def rule_based_search(query, vector_store, num_chunks=5, file_type=None):
     """
     Search documents for exact matches of:
     1. Rule IDs (format: BV-XXXXX)
     2. Numbers found in the query
     Returns up to num_chunks matching documents
+    Falls back to embedding-based search if no exact matches found
     """
     # Extract numbers or rule ID from the query
     numbers_in_query = extract_numbers_from_query(query)
@@ -73,9 +73,15 @@ def rule_based_search(query, vector_store, num_chunks=8):
         ]
         if matches:
             return matches[:num_chunks]  # Return top 'num_chunks' matches
-
-    # If no matches found, return an empty list
-    return []
+    # Fall back to embedding-based search for more complex queries
+    retriever = docsearch.as_retriever(search_kwargs={"k": num_chunks})
+    if file_type:
+        retriever = docsearch.as_retriever(
+            search_kwargs={"k": num_chunks, "filter": {"file_type": file_type}}
+        )
+    similar_docs = retriever.invoke(query)
+    matches = [match["metadata"].get("page_content", "") for match in similar_docs["matches"]]
+    return "\n".join(matches)
 
 
 # Define a function to run the LLM query pipeline
@@ -111,6 +117,9 @@ def run_llm(query: str, chat_history):
     """
     I am Onase Helper Bot, your dedicated assistant for all application-related queries and healthcare information needs. I provide accurate, concise information while maintaining context awareness throughout our conversations.
 
+    Instructions:
+    - Please do not give an elaborate introduction, do not output long text, if you do break them into paragraphs. Please keep responses to 2-3 sentences max.
+
     Core Guidelines:
     • I offer direct, clear answers without unnecessary prefacing phrases
     • I use bullet points for clarity unless detailed explanations are needed
@@ -119,6 +128,7 @@ def run_llm(query: str, chat_history):
     • I never share sensitive credentials or login information
 
     Response Format:
+    * I am always brief, unless specified not too, do not make your responses too wordy, be to the point.
     • I default to organized bullet points
     • I keep responses focused and concise
     • I use appropriate medical and technical terminology
@@ -143,7 +153,7 @@ def run_llm(query: str, chat_history):
     rephrase_prompt = ChatPromptTemplate.from_template( 
     """
     Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question.
-
+    Please keep the response in a neat format always using bullet points and breaking down things into sections.
 
     Chat History:
 
