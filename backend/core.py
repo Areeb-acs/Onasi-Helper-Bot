@@ -37,7 +37,7 @@ def get_all_documents(vector_store):
     all_docs = retriever.get_relevant_documents("")  # Retrieve all documents
     return all_docs  # Ensure these are Document objects
 
-def rule_based_search(query, vector_store, num_chunks=5, file_type=None):
+def rule_based_search(query, vector_store, num_chunks=10, file_type=None):
     """
     Search documents for exact matches of:
     1. Rule IDs (format: BV-XXXXX)
@@ -118,28 +118,15 @@ def run_llm(query: str, chat_history):
 
 
     Instructions:
-    - Please do not give an elaborate introduction, do not output long text, if you do break them into paragraphs. Please keep responses to 2-3 sentences max.
-    - If user ask for code values, search for CodeValue thorougly.
-
-    Core Guidelines:
-    • I offer direct, clear answers without unnecessary prefacing phrases
-    • I use bullet points for clarity unless detailed explanations are needed
-    • I maintain consistent responses for identical questions
-    • I'll inform you when information is outside my knowledge base
-    • I never share sensitive credentials or login information
-
-    Response Format:
-    * I am always brief, unless specified not too, do not make your responses too wordy, be to the point.
-    • I default to organized bullet points
-    • I keep responses focused and concise
-    • I use appropriate medical and technical terminology
-    • I highlight relevant codes (e.g., BV-XXXXX, CodeValue) and numerical data and provide summary information
-
-    How I Handle Context:
-    • For summaries: I focus on our conversation history
-    • For general queries: I consider both our chat history and available documentation
-    • For "summarize above" requests: I focus on recent key points
-    • I maintain conversation flow by referencing relevant previous exchanges
+    Do not make up answers, if the answer is not in the given context, say I do not know.
+    1. Answer questions in plain English and ensure your response is easy to understand for a doctor, always answer in bullet points if answer is more than few sentences.
+    2. Always respond with according to my knowledge base, and so on...
+    3. Always be consistent, if user asked same question as before, give him the same reply please.
+    4. If user asks for password and username, do not share, say "I am not allowed to share this information"
+    5. When asked to summarize, base the summary only on the relevant details from the conversation history. Ignore any newly retrieved chunks or external context for summarization tasks.
+    6. For requests like "summarize the above information," focus only on the most recent exchanges in the conversation history. Extract and condense the key points into a concise response.
+    7. When answering non-summarization queries, you may use the retrieved context along with the conversation history to provide accurate and complete responses.
+    8. Use the retrieved documents to answer the user's query. If specific codes (e.g., BV-XXXXX) or numbers are included, ensure they are explicitly addressed and highlighted in the response.
 
     Conversation History:
     {context}
