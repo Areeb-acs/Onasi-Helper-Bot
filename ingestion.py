@@ -25,30 +25,64 @@ vector_store = PineconeVectorStore(index_name=index_name, embedding=embeddings) 
 
 def load_json_documents(folder_path):
     """
-    Load and process JSON files into a list of Document objects.
+    Load and process JSON files into a list of Document objects with specific metadata.
 
     Args:
-        file_paths (list of str): List of JSON file paths to process.
+        folder_path (str): Path to the folder containing JSON files.
 
     Returns:
         list of Document: A list of Document objects with content and metadata.
     """
     combined_json_documents = []
 
-    for file_path in os.listdir(folder_path):
-        file_path = os.path.join(folder_path, file_path)
+    for file_name in os.listdir(folder_path):
+        file_path = os.path.join(folder_path, file_name)
+
         try:
             # Read JSON file
             data = pd.read_json(file_path)
             
-            # Convert each row in the JSON to a Document
-            for _, row in data.iterrows():
-                combined_json_documents.append(
-                    Document(
-                        page_content=str(row.to_dict()),
-                        metadata={"file_type": "json", "source": file_path.split('/')[-1]}  # Add source dynamically
+            # Process validation.json
+            if file_name.lower().startswith("nphies"):
+                for _, row in data.iterrows():
+                    row_dict = row.to_dict()
+                    rule_id = row_dict.get("Rule ID", None)  # Extract Rule ID
+
+                    combined_json_documents.append(
+                        Document(
+                            page_content=str(row_dict),  # Store the entire row as a string
+                            metadata={
+                                "file_type": "validation",
+                                "source": file_name,  # Include the file name as metadata
+                                "Rule ID": rule_id if rule_id else "Unknown"  # Handle missing Rule ID
+                            }
+                        )
                     )
-                )
+
+            # Process coding.json
+            elif file_name.lower().startswith("medical"):
+                for _, row in data.iterrows():
+                    row_dict = row.to_dict()
+                    code_value = row_dict.get("CodeValue", None)  # Extract CodeValue
+                    if code_value is None or pd.isna(code_value):  # Handle missing or NaN values
+                        code_value = "Unknown"
+                    else:
+                        code_value = str(code_value)  # Convert CodeValue to string for uniformity
+
+                    combined_json_documents.append(
+                        Document(
+                            page_content=str(row_dict),  # Store the entire row as a string
+                            metadata={
+                                "file_type": "coding",
+                                "source": file_name,  # Include the file name as metadata
+                                "CodeValue": code_value  # Handle text or numeric CodeValue
+                            }
+                        )
+                    )
+
+            else:
+                print(f"Skipping file {file_name}: Unknown type.")
+
         except ValueError as e:
             print(f"Error processing JSON file {file_path}: {e}")
 
@@ -127,23 +161,28 @@ def ingest_docs():
     # Combine all documents
     all_documents = pdf_documents + json_documents
 
-    # Split documents into chunks for embedding
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=200)
+    # Split PDF documents into chunks using RecursiveCharacterTextSplitter
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
 
     split_documents = []
     for doc in all_documents:
-        split_documents.extend(text_splitter.split_documents([doc]))
+        if doc.metadata.get("file_type") in ["coding", "validation"]:
+            # JSON documents: No chunking, add as-is
+            split_documents.append(doc)
+        else:
+            # For non-JSON documents (e.g., PDFs), use the splitter
+            split_documents.extend(text_splitter.split_documents([doc]))
 
-    print(f"Going to add {len(split_documents)} to Pinecone")
+    print(f"Going to add {len(split_documents)} documents to Pinecone")
     for doc in split_documents:
         print(f"Document Metadata: {doc.metadata}, Content Length: {len(doc.page_content)}")
 
     # Index documents in Pinecone using PineconeVectorStore
     PineconeVectorStore.from_documents(
         split_documents, embeddings, index_name="rcm-final-app"
-    )  # Updated indexing method
+    )
 
-    print("****Loading to vectorstore done ***")
+    print("****Loading to vectorstore done ****")
 
 if __name__ == "__main__":
     ingest_docs()

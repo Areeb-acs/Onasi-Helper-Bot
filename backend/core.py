@@ -46,54 +46,92 @@ def get_all_documents(vector_store, domain=None):
 
     return all_docs  # Ensure these are Document objects
 
-def rule_based_search(query, vector_store, num_chunks=10, file_type=None, domain=None):
+def parameter_based_search(query, vector_store, num_chunks=15, file_type=None, domain=None):
     """
-    Search documents for exact matches of:
-    1. Rule IDs (format: BV-XXXXX)
-    2. Numbers found in the query
-    Returns up to num_chunks matching documents
-    Falls back to embedding-based search if no exact matches found
+    Search documents based on parameters:
+    1. Searches `coding.json` for `CodeValue` or `Code Value` matches.
+    2. Searches `validation.json` for `Rule ID` matches (format: two letters followed by numbers).
+    Falls back to embedding-based search for more complex queries.
     """
-    # Extract numbers or rule ID from the query
-    numbers_in_query = extract_numbers_from_query(query)
-    rule_id_match = re.search(r"BV-\d{5}", query)  # Adjust regex for your Rule ID format
-    print(rule_id_match)
+    import re
+
+    # Check if CodeValue or Code Value (with or without space) is mentioned in the query
+    is_code_value_search = re.search(r"\bCode\s?Value\b", query, re.IGNORECASE)
+
+    # Extract numbers in the query
+    numbers_in_query = re.findall(r"\b\d+\b", query)
+
+    # Extract Rule ID from the query
+    rule_id_match = re.search(r"\b[A-Za-z]{2}-\d+\b", query)  # Match "XX-12345" format Rule IDs
+
+    matches = []
 
     # Retrieve all documents from the vector store
     final_documents = get_all_documents(vector_store, domain=domain)
-    matches = []
 
-    # Check for Rule ID match
+    # If numbers are present and CodeValue (or Code Value) is explicitly mentioned
+   # If numbers are present and CodeValue (or Code Value) is explicitly mentioned
+    if is_code_value_search and numbers_in_query:
+        for number in numbers_in_query:
+            number_str = str(number).strip()  # Convert the number to a string
+            quoted_number = f'"{number_str}"'  # Add double quotes if needed for strict matching
+            print(f"Searching for CodeValue: {number_str} (and as quoted: {quoted_number})")  # Debugging output
+
+            # Use retriever with direct filter for CodeValue
+            retriever = vector_store.as_retriever(
+                search_kwargs={
+                    "k": num_chunks,
+                    "filter": {"file_type": "coding", "CodeValue": number_str}
+                }
+            )
+
+            # Retrieve documents
+            filtered_docs = retriever.get_relevant_documents(query)
+
+            if filtered_docs:
+                print(f"Found {len(filtered_docs)} matches for CodeValue: {number_str}")
+                matches.extend(filtered_docs[:num_chunks])
+            else:
+                print(f"No matches found for CodeValue: {number_str}.")
+
+    # Check for Rule ID matches
     if rule_id_match:
-        rule_id_to_search = rule_id_match.group(0)  # Extract matched Rule ID
-        rule_matches = [
-            doc for doc in final_documents if rule_id_to_search in doc.page_content
-        ]
-        matches.extend(rule_matches[:num_chunks])
+        rule_id_to_search = rule_id_match.group(0).strip()  # Extract the Rule ID
+        print(f"Searching for Rule ID: {rule_id_to_search}")  # Debugging output
 
-    # Check for exact match search based on numbers
-    if numbers_in_query:
-        number_to_search = str(numbers_in_query[0])  # Convert to string for comparison
-        number_matches = [
-            doc for doc in final_documents if number_to_search in doc.page_content
-        ]
-        matches.extend(number_matches[:num_chunks])
-    # Check if domain is set and retrieve results accordingly
-    if domain:
-        retriever = vector_store.as_retriever(search_kwargs={"k": num_chunks, "filter": {"domain": domain}})
-        similar_docs = retriever.get_relevant_documents(query)
-    else:
-        # Fall back to embedding-based search for more complex queries
-        retriever = vector_store.as_retriever(search_kwargs={"k": num_chunks})
-        similar_docs = retriever.get_relevant_documents(query)
+        # Use retriever with direct filter for Rule ID
+        retriever = vector_store.as_retriever(
+            search_kwargs={
+                "k": num_chunks,
+                "filter": {"file_type": "validation", "Rule ID": rule_id_to_search}
+            }
+        )
 
-    # Ensure embedding-based matches are added properly
-    embedding_matches = [doc for doc in similar_docs if hasattr(doc, "page_content")]
-    matches.extend(embedding_matches)
+        # Retrieve documents
+        filtered_docs = retriever.get_relevant_documents(query)
+
+        if filtered_docs:
+            print(f"Found {len(filtered_docs)} matches for Rule ID: {rule_id_to_search}")
+            matches.extend(filtered_docs[:num_chunks])
+        else:
+            print(f"No matches found for Rule ID: {rule_id_to_search}.")
+
+
+    # Fall back to embedding-based search for more complex queries
+    if not matches:
+        print("No exact matches found. Falling back to embedding-based search.")  # Debugging output
+        if domain:
+            retriever = vector_store.as_retriever(search_kwargs={"k": num_chunks, "filter": {"domain": domain}})
+        else:
+            retriever = vector_store.as_retriever(search_kwargs={"k": num_chunks})
+
+        similar_docs = retriever.get_relevant_documents(query)
+        embedding_matches = [doc for doc in similar_docs if hasattr(doc, "page_content")]
+        matches.extend(embedding_matches)
 
     # Return the matches
+    print(f"Found {len(matches)} matches.")  # Debugging output
     return matches
-
 
 
 # Define a function to run the LLM query pipeline
@@ -135,13 +173,12 @@ def run_llm(query: str, chat_history, domain=None):
     retrieval_qa_chat_prompt = ChatPromptTemplate.from_template( 
     """
     You are a friendly conversational chatbot that remembers context across a conversation. Use the provided conversation history to understand the user's question and provide clear, concise, and accurate responses for doctors.
-
+    Only answer based on given context.
     Instructions:
+    Only answer based on given context.
     1. Always always output the response in html not in plain text so everything can be displayed in a web application correctly like bullet points, spaces etc.
     1. Always refer to the conversation history for context and maintain continuity in your responses.
     2. Answer questions in plain English and ensure your response is easy to understand for a doctor.
-    3. When asked to summarize, base the summary only on the relevant details from the conversation history. Ignore any newly retrieved chunks or external context for summarization tasks.
-    4. For requests like "summarize the above information," focus only on the most recent exchanges in the conversation history. Extract and condense the key points into a concise response.
     5. When answering non-summarization queries, you may use the retrieved context along with the conversation history to provide accurate and complete responses.
 
     Conversation History:
@@ -174,19 +211,19 @@ def run_llm(query: str, chat_history, domain=None):
         llm=chat, retriever=retriever, prompt=rephrase_prompt
     )
     # # Perform rule-based search and format results
-    # result = rule_based_search(query, docsearch, num_chunks=10)
-    # additional_context = "\n".join([doc.page_content for doc in result])
-    
+    result = parameter_based_search(query, docsearch, num_chunks=3)
+    additional_context = "\n".join([doc.page_content for doc in result])
+    print(additional_context)
     # Create chain to combine documents into a response
     stuff_documents_chain = create_stuff_documents_chain(chat, retrieval_qa_chat_prompt)
     
     # Combine query with any exact matches found
-    # query_with_context = f"{query}\n\nAdditional Context:\n{additional_context}"
+    query_with_context = f"{query}\n\nAdditional Context:\n{additional_context}"
     
     # Create and execute the final retrieval chain
     qa = create_retrieval_chain(retriever=history_aware_retriever, combine_docs_chain=stuff_documents_chain)
     result = qa.invoke({
-        "input": query,
+        "input": query_with_context,
         "chat_history": chat_history,
     })
 
