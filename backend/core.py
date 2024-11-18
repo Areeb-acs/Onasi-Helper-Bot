@@ -173,7 +173,7 @@ def run_llm(query: str, chat_history, domain=None):
     retrieval_qa_chat_prompt = ChatPromptTemplate.from_template( 
     """
     You are a friendly conversational chatbot that remembers context across a conversation. Use the provided conversation history to understand the user's question and provide clear, concise, and accurate responses for doctors.
-    Only answer based on given context.
+    Only answer based on given context and please do not be too wordy, give good answers.
     Instructions:
     Only answer based on given context.
     1. Always always output the response in html not in plain text so everything can be displayed in a web application correctly like bullet points, spaces etc.
