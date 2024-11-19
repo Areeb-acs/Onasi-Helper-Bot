@@ -133,25 +133,17 @@ def parameter_based_search(query, vector_store, num_chunks=15, file_type=None, d
     print(f"Found {len(matches)} matches.")  # Debugging output
     return matches
 
+def is_conversation_start(chat_history):
+    """
+    Check if this is the start of a conversation
+    """
+    return not chat_history or len(chat_history) == 0
 
-# Define a function to run the LLM query pipeline
 def run_llm(query: str, chat_history, domain=None):
     """
-    Main pipeline for processing user queries:
-    1. Sets up vector store and LLM (Groq)
-    2. Defines conversation prompts
-    3. Performs rule-based search for exact matches
-    4. Creates a retrieval chain that:
-       - Considers chat history
-       - Combines relevant documents
-       - Generates a response using the LLM
+    Main pipeline for processing user queries
     """
-    # Initialize the embedding model to vectorize text.
-    # The OpenAIEmbeddings class is used to generate embeddings for both the query and documents.
-    # The `model="text-embedding-3-small"` specifies the particular embedding model to use.
-
-    # Initialize the Pinecone vector store.
-    # Use the Pinecone instance directly as a retriever
+    # Initialize components as before
     if domain:
         docsearch = Pinecone(
             index_name=INDEX_NAME,
@@ -159,49 +151,68 @@ def run_llm(query: str, chat_history, domain=None):
         )
         retriever = docsearch.as_retriever(search_kwargs={"filter": {"domain": domain}})
     else:
-        # Default case when no domain is specified
         docsearch = Pinecone(index_name=INDEX_NAME, embedding=embeddings)
         retriever = docsearch.as_retriever()
 
-    # Set up the LLM for conversational responses.
-    # `ChatOpenAI` initializes a chat-based language model with the specified parameters.
-    # `verbose=True` ensures that additional processing details are logged for debugging.
-    # `temperature=0` controls the randomness of the responses; a lower value makes outputs more deterministic.
     chat = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-8b-8192")
 
-    # Define the main conversation prompt template
-    retrieval_qa_chat_prompt = ChatPromptTemplate.from_template( 
-    """
-    You are a friendly conversational chatbot that remembers context across a conversation. Use the provided conversation history to understand the user's question and provide clear, concise, and accurate responses for doctors.
-    Only answer based on given context and please be brief always, unless asked by user for more information.
+    # Check if this is the start of a conversation
+    if is_conversation_start(chat_history):
+        retrieval_qa_chat_prompt = ChatPromptTemplate.from_template(
+        """
+        You are starting a new conversation.
+        
+        Instructions:
+        1. Regardless of the context provided, for the very first response, only say exactly "Hello! How can I help you today?" without any additional text
+        2. Format the response in HTML
 
-    Instructions:
-    Please provide output in html format having bullet points, paragraph breaks, neat bullet points.
-    Only answer based on given context.
+        Context from documents (ignore for greeting):
+        {context}
 
-    1. If there is any NULL character or empty string, then replace that with no information found.
-    2. If there are codes like RE or anything that is unclear, please ask the user for more information.
-    2. Always always output the response in html not in plain text so everything can be displayed in a web application correctly like bullet points, spaces etc.
-    3. Always refer to the conversation history for context and maintain continuity in your responses.
-    4. When answering non-summarization queries, you may use the retrieved context along with the conversation history to provide accurate and complete responses.
+        Current Query:
+        {input}
 
-    Conversation History:
-    {context}
+        Response (only say "Hello! How can I help you today?"):
+        """
+        )
+    else:
+        # Check if the query is a personal introduction
+        if any(intro in query.lower() for intro in ["i am", "i'm", "my name"]):
+            name = query.lower().replace("i am", "").replace("i'm", "").replace("my name is", "").strip()
+            return {"answer": f"<p>Hello {name}, pleasure to meet you!</p>"}
+            
+        # Regular prompt for other messages
+        retrieval_qa_chat_prompt = ChatPromptTemplate.from_template( 
+        """
+        You are a friendly conversational chatbot that remembers context across a conversation. Use the provided conversation history to understand the user's question and provide clear, concise, and accurate responses for users.
+        Only answer based on given context and if context not relevant, please say I do not know. Please give shortest answers possible to questions unless asked otherwise.
+        Do not make up answers.
 
-    Current Query:
-    {input}
-    """
-)
-    
-    
-        # Define prompt for rephrasing follow-up questions
+        Instructions:
+        Please provide output in html format having bullet points, paragraph breaks, neat bullet points.
+        Only answer based on given context.
+
+        1. If there is any NULL character or empty string, then replace that with no information found.
+        2. If there are codes like RE or anything that is unclear, please ask the user for more information.
+        3. Always output the response in html not in plain text
+        4. Always refer to the conversation history for context and maintain continuity in your responses but please be direct.
+        5. By default, your answers should not be more than 2 sentences, unless user asks for detailed information, if there is no information, say you do not know.
+
+        Context from documents:
+        {context}
+
+        Current Query:
+        {input}
+        """
+        )
+
+    # Rest of your existing code...
     rephrase_prompt = ChatPromptTemplate.from_template( 
     """
     Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question.
     Please keep the response in a neat format always using bullet points and breaking down things into sections.
 
     Chat History:
-
     {chat_history}
 
     Follow Up Input: {input}
@@ -209,30 +220,22 @@ def run_llm(query: str, chat_history, domain=None):
     Standalone Question:
     """
     )
- 
+
     # Create retriever that's aware of conversation history
     history_aware_retriever = create_history_aware_retriever(
         llm=chat, retriever=retriever, prompt=rephrase_prompt
     )
-    # # Perform rule-based search and format results
+    
     result = parameter_based_search(query, docsearch, num_chunks=3)
     additional_context = "\n".join([doc.page_content for doc in result])
-    print(additional_context)
-    # Create chain to combine documents into a response
-    stuff_documents_chain = create_stuff_documents_chain(chat, retrieval_qa_chat_prompt)
     
-    # Combine query with any exact matches found
+    stuff_documents_chain = create_stuff_documents_chain(chat, retrieval_qa_chat_prompt)
     query_with_context = f"{query}\n\nAdditional Context:\n{additional_context}"
     
-    # Create and execute the final retrieval chain
     qa = create_retrieval_chain(retriever=history_aware_retriever, combine_docs_chain=stuff_documents_chain)
     result = qa.invoke({
         "input": query_with_context,
         "chat_history": chat_history,
     })
 
-    # Print the result for debugging purposes.
-    # print(result)
-
-    # Return the result to the caller.
     return result
