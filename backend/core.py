@@ -175,6 +175,7 @@ def run_llm(query: str, chat_history, domain=None):
     You are a friendly conversational chatbot that remembers context across a conversation. Use the provided conversation history to understand the user's question and provide clear, concise, and accurate responses for doctors.
     Only answer based on given context and please do not be too wordy, give good answers.
     Instructions:
+    Please provide output in html format having bullet points, paragraph breaks, neat bullet points.
     Only answer based on given context.
     1. Always always output the response in html not in plain text so everything can be displayed in a web application correctly like bullet points, spaces etc.
     1. Always refer to the conversation history for context and maintain continuity in your responses.
