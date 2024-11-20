@@ -154,7 +154,7 @@ def run_llm(query: str, chat_history, domain=None):
         docsearch = Pinecone(index_name=INDEX_NAME, embedding=embeddings)
         retriever = docsearch.as_retriever()
 
-    chat = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-8b-8192")
+    chat = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-70b-8192")
 
     # Check if this is the start of a conversation
     if is_conversation_start(chat_history):
