@@ -167,9 +167,10 @@ def run_llm(query: str, chat_history, domain=None):
             """
             You are a friendly conversational chatbot that remembers context across a conversation. Use the provided conversation history to understand the user's question and provide clear, concise, and accurate responses for users.
             Only answer based on given context and if context not relevant, please say I do not know. Please give shortest answers possible to questions unless asked otherwise.
-            Do not make up answers.
+            Do not make up answers. Provide direct responses without any explanatory notes or parenthetical comments.
 
             Instructions:
+            Provide direct responses without any explanatory notes or parenthetical comments.
             Please provide output in html format having bullet points, paragraph breaks, neat bullet points.
             Only answer based on given context.
 
@@ -195,9 +196,9 @@ def run_llm(query: str, chat_history, domain=None):
         # Regular prompt for other messages
         retrieval_qa_chat_prompt = ChatPromptTemplate.from_template( 
         """
-        You are a friendly conversational chatbot that remembers context across a conversation. Use the provided conversation history to understand the user's question and provide clear, concise, and accurate responses for users.
+        You are a friendly conversational chatbot that remembers context across a conversation. Provide direct responses without any explanatory notes or parenthetical comments.
         Only answer based on given context and if context not relevant, please say I do not know. Please give shortest answers possible to questions unless asked otherwise.
-        Do not make up answers.
+        Do not make up answers. Provide direct responses without any explanatory notes or parenthetical comments.
 
         Instructions:
         Please provide output in html format having bullet points, paragraph breaks, neat bullet points.
