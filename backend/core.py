@@ -209,6 +209,8 @@ def run_llm(query: str, chat_history, domain=None):
         4. Always refer to the conversation history for context and maintain continuity in your responses but please be direct.
         5. By default, your answers should not be more than 2 sentences, unless user asks for detailed information, if there is no information, say you do not know.
 
+        If there is any terms like RCM AP or nonsensical terms, please please say I do not know about this term or do not have enough information about it.
+
         Context from documents:
         {context}
 
