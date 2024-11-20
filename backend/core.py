@@ -158,23 +158,28 @@ def run_llm(query: str, chat_history, domain=None):
 
     # Check if this is the start of a conversation
     if is_conversation_start(chat_history):
-        retrieval_qa_chat_prompt = ChatPromptTemplate.from_template(
-        """
-        You are starting a new conversation.
-        
-        Instructions:
-        1. Regardless of the context provided, for the very first response, only say exactly "Hello! How can I help you today?" without any additional text
-        2. Format the response in HTML
+        # If it's a greeting, respond with hello
+        if any(greeting in query.lower() for greeting in ["hello", "hi", "hey", "greetings", "good morning", "good afternoon", "good evening"]):
+            return {"answer": "<p>Hello! How can I help you today?</p>"}
+        # If it's not a greeting, proceed with context-based response
+        else:
+            retrieval_qa_chat_prompt = ChatPromptTemplate.from_template(
+            """
+            You are starting a new conversation. The user's first message is not a greeting, so provide a relevant response based on the context.
+            
+            Instructions:
+            1. Format the response in HTML
+            2. Be concise and direct
+            3. Only answer based on the given context
+            4. If no relevant information is found, say "I don't know"
 
-        Context from documents (ignore for greeting):
-        {context}
+            Context from documents:
+            {context}
 
-        Current Query:
-        {input}
-
-        Response (only say "Hello! How can I help you today?"):
-        """
-        )
+            Current Query:
+            {input}
+            """
+            )
     else:
         # Check if the query is a personal introduction
         if any(intro in query.lower() for intro in ["i am", "i'm", "my name"]):
