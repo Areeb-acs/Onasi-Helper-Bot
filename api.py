@@ -5,9 +5,7 @@ from backend.faq_bot import FAQBot
 
 app = FastAPI()
 
-SUPPORTED_DOMAINS = {"RCM", "DHIS", "QA"}  # Add your supported domains here
-faq_bot = FAQBot("./JSON_Documents/faq_data.json")
-
+SUPPORTED_DOMAINS = {"RCM", "DHIS"}
 
 @app.get("/")
 async def get_root():
@@ -37,24 +35,10 @@ async def chat_endpoint(request: Request):
     # Validate the domain if specified
     if domain and domain not in SUPPORTED_DOMAINS:
         return {"error": f"Unsupported domain '{domain}'. Supported domains are: {', '.join(SUPPORTED_DOMAINS)}"}
-    
-    if domain == "QA":                 # Use FAQ bot for QA domain
-        response = await faq_bot.get_response(
-            question=question,
-            chat_model=None  # We don't need chat model fallback for FAQs
-        )
-
-        # Append question and response to chat history
-        chat_history.append(("human", question))
-        chat_history.append(("ai", response))
-
-        return {
-            "answer": response,
-            "chat_history": chat_history
-        }
 
     async def response_generator():
-        # Generate response dynamically using run_llm with domain
+        # Generate response using run_llm with domain
+        # run_llm will handle the QA check first for RCM domain
         generated_response = run_llm(query=question, chat_history=chat_history, domain=domain)
         answer = generated_response.get("answer", "")
         # Stream the response in chunks

@@ -143,127 +143,147 @@ def is_conversation_start(chat_history):
 
 def run_llm(query: str, chat_history, domain=None):
     """
-    Main pipeline for processing user queries
+    Main pipeline for processing user queries with priority for FAQ/QA domain
     """
-    # Initialize components as before
-    if domain:
-        docsearch = Pinecone(
-            index_name=INDEX_NAME,
-            embedding=embeddings
-        )
-        retriever = docsearch.as_retriever(search_kwargs={"filter": {"domain": domain}})
-    else:
-        docsearch = Pinecone(index_name=INDEX_NAME, embedding=embeddings)
-        retriever = docsearch.as_retriever()
-
+    # Initialize Pinecone with embeddings
+    docsearch = Pinecone(index_name=INDEX_NAME, embedding=embeddings)
     chat = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-70b-8192")
 
-    # Check if this is the start of a conversation
-    if is_conversation_start(chat_history):
-        # If it's a greeting, respond with hello
-        if any(greeting in query.lower() for greeting in ["hello", "hi", "hey", "greetings", "good morning", "good afternoon", "good evening"]):
-            return {"answer": "<p>Hello! How can I help you today?</p>"}
-        # If it's not a greeting, proceed with context-based response
-        else:
+    # First, try to find matches in QA domain
+    qa_retriever = docsearch.as_retriever(
+        search_kwargs={
+            "filter": {"domain": "QA"},
+            "k": 2
+        }
+    )
+    
+    # Get QA domain results
+    qa_docs = qa_retriever.get_relevant_documents(query)
+    
+    if qa_docs:
+        qa_context = "\n".join([doc.page_content for doc in qa_docs])
+        if qa_context.strip():  # Check if we have meaningful content
+            # Use the QA-specific prompt
+            qa_prompt = ChatPromptTemplate.from_template(
+                """
+                You are a helpful assistant. Answer the question based on the provided context only and in html format in bullet points where appropriate.
+                Use exact same wording
+                If no relevant response, say I don't know.
+                
+                Context:
+                {context}
+
+                Question: {input}
+                """
+            )
+
+            stuff_documents_chain = create_stuff_documents_chain(chat, qa_prompt)
+            qa_chain = create_retrieval_chain(
+                retriever=qa_retriever,
+                combine_docs_chain=stuff_documents_chain
+            )
+
+            result = qa_chain.invoke({
+                "input": query
+            })
+            
+            # If the result contains "I don't know" or "I couldn't find", proceed to the next search
+            if result and ("I don't know" in result["answer"] or "I couldn't find" in result["answer"]):
+                pass  # Ignore this result and continue
+            else:
+                # If a meaningful response is found, return it immediately
+                return result
+
+            # If a meaningful response is found, return it immediately
+        
+            # If no domain is specified, search all documents without a filter
+            if not domain:
+                domain_retriever = docsearch.as_retriever(
+                    search_kwargs={
+                        "filter": {},  # No domain filter
+                        "k": 3
+                    }
+                )
+            else:
+                # Use domain-specific search
+                domain_retriever = docsearch.as_retriever(
+                    search_kwargs={
+                        "filter": {"domain": domain},
+                        "k": 3
+                    }
+                )
+            # Rest of your existing code for domain-specific search
             retrieval_qa_chat_prompt = ChatPromptTemplate.from_template(
+                """
+                You are a friendly conversational chatbot that remembers context across a conversation. Use the provided conversation history to understand the user's question and provide clear, concise, and accurate responses for users.
+                Only answer based on given context and if context not relevant, please say I do not know. Please give shortest answers possible to questions unless asked otherwise.
+                Do not make up answers. Provide direct responses without any explanatory notes or parenthetical comments.
+
+                Instructions:
+                Provide direct responses without any explanatory notes or parenthetical comments.
+                Please provide output in html format having bullet points, paragraph breaks, neat bullet points.
+                Only answer based on given context.
+
+                1. If there is any NULL character or empty string, then replace that with no information found.
+                2. If there are codes like RE or anything that is unclear, please ask the user for more information.
+                3. Always output the response in html not in plain text
+                4. Always refer to the conversation history for context and maintain continuity in your responses but please be direct.
+                5. By default, your answers should not be more than 2 sentences, unless user asks for detailed information, if there is no information, say you do not know.
+
+                Context from documents:
+                {context}
+
+                Current Query:
+                {input}
+                """
+            )
+            
+            rephrase_prompt = ChatPromptTemplate.from_template( 
             """
-            You are a friendly conversational chatbot that remembers context across a conversation. Use the provided conversation history to understand the user's question and provide clear, concise, and accurate responses for users.
-            Only answer based on given context and if context not relevant, please say I do not know. Please give shortest answers possible to questions unless asked otherwise.
-            Do not make up answers. Provide direct responses without any explanatory notes or parenthetical comments.
+            Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question.
+            Please keep the response in a neat format always using bullet points and breaking down things into sections.
 
-            Instructions:
-            Provide direct responses without any explanatory notes or parenthetical comments.
-            Please provide output in html format having bullet points, paragraph breaks, neat bullet points.
-            Only answer based on given context.
+            Chat History:
+            {chat_history}
 
-            1. If there is any NULL character or empty string, then replace that with no information found.
-            2. If there are codes like RE or anything that is unclear, please ask the user for more information.
-            3. Always output the response in html not in plain text
-            4. Always refer to the conversation history for context and maintain continuity in your responses but please be direct.
-            5. By default, your answers should not be more than 2 sentences, unless user asks for detailed information, if there is no information, say you do not know.
+            Follow Up Input: {input}
 
-            Context from documents:
-            {context}
-
-            Current Query:
-            {input}
+            Standalone Question:
             """
             )
-    else:
-        # Check if the query is a personal introduction
-        if any(intro in query.lower() for intro in ["i am", "i'm", "my name"]):
-            name = query.lower().replace("i am", "").replace("i'm", "").replace("my name is", "").strip()
-            return {"answer": f"<p>Hello {name}, pleasure to meet you!</p>"}
             
-        # Regular prompt for other messages
-        retrieval_qa_chat_prompt = ChatPromptTemplate.from_template( 
-        """
-        You are a friendly conversational chatbot that remembers context across a conversation. Provide direct responses without any explanatory notes or parenthetical comments.
-        Only answer based on given context and if context not relevant, please say I do not know. Please give shortest answers possible to questions unless asked otherwise.
-        Do not make up answers. Provide direct responses without any explanatory notes or parenthetical comments.
+            history_aware_retriever = create_history_aware_retriever(
+                llm=chat,
+                retriever=domain_retriever,
+                prompt=rephrase_prompt
+            )
+            
+            result = parameter_based_search(query, docsearch, num_chunks=3)
+            additional_context = "\n".join([doc.page_content for doc in result])
+            
+            stuff_documents_chain = create_stuff_documents_chain(
+                chat,
+                retrieval_qa_chat_prompt
+            )
+            
+            query_with_context = f"{query}\n\nAdditional Context:\n{additional_context}"
+            
+            qa = create_retrieval_chain(
+                retriever=history_aware_retriever,
+                combine_docs_chain=stuff_documents_chain
+            )
+            
+            result = qa.invoke({
+                "input": query_with_context,
+                "chat_history": chat_history,
+            })
+            
+            return result
 
-        Instructions:
-        Please provide output in html format having bullet points, paragraph breaks, neat bullet points.
-        Only answer based on given context.
+        # If no matches found in either QA or domain-specific search
+        return {
+            "answer": "<p>I'm sorry, I couldn't find a relevant answer to your question.</p>",
+            "chat_history": chat_history
+        }
 
-        1. If there is any NULL character or empty string, then replace that with no information found.
-        2. If there are codes like RE or anything that is unclear, please ask the user for more information.
-        3. Always output the response in html not in plain text
-        4. Always refer to the conversation history for context and maintain continuity in your responses but please be direct.
-        5. By default, your answers should not be more than 2 sentences, unless user asks for detailed information, if there is no information, say you do not know.
-
-        If there is any terms like RCM AP or nonsensical terms, please please say I do not know about this term or do not have enough information about it.
-
-        Context from documents:
-        {context}
-
-        Current Query:
-        {input}
-        """
-        )
-
-    # Rest of your existing code...
-    rephrase_prompt = ChatPromptTemplate.from_template( 
-    """
-    Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question.
-    Please keep the response in a neat format always using bullet points and breaking down things into sections.
-
-    Chat History:
-    {chat_history}
-
-    Follow Up Input: {input}
-
-    Standalone Question:
-    """
-    )
-
-    # Create retriever that's aware of conversation history
-    history_aware_retriever = create_history_aware_retriever(
-        llm=chat, retriever=retriever, prompt=rephrase_prompt
-    )
-    
-    result = parameter_based_search(query, docsearch, num_chunks=3)
-    additional_context = "\n".join([doc.page_content for doc in result])
-    
-    stuff_documents_chain = create_stuff_documents_chain(chat, retrieval_qa_chat_prompt)
-    query_with_context = f"{query}\n\nAdditional Context:\n{additional_context}"
-    
-    qa = create_retrieval_chain(retriever=history_aware_retriever, combine_docs_chain=stuff_documents_chain)
-    result = qa.invoke({
-        "input": query_with_context,
-        "chat_history": chat_history,
-    })
-
-    return result
-
-class ChatBot:
-    def __init__(self):
-        # Initialize FAQ bot
-        self.faq_bot = FAQBot("faq_data.json")
-
-    async def get_response(self, question: str) -> str:
-        """Get response using FAQ bot with chat model fallback"""
-        return await self.faq_bot.get_response(
-            question=question,
-            chat_model=self  # Pass self as chat model for fallback
-        )
+    # If no matches found in QA domain

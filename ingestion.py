@@ -142,7 +142,46 @@ def load_pdf_documents(folder_path, domain):
     # Return or process the combined documents as needed
     return all_pdf_documents
 
+def load_faq_documents(file_path):
+    """
+    Load and process FAQ data into Document objects without any text splitting.
+    Each FAQ entry becomes a single document with its question and answer.
 
+    Args:
+        file_path (str): Path to the FAQ JSON file.
+
+    Returns:
+        list of Document: A list of Document objects with FAQ content and metadata.
+    """
+    faq_documents = []
+
+    try:
+        # Read JSON file
+        with open(file_path, 'r', encoding='utf-8') as f:
+            faq_data = json.load(f)
+
+        # Process each FAQ entry as a single document
+        for faq_entry in faq_data:
+            faq_documents.append(
+                Document(
+                    page_content=faq_entry['answer'],  # Store only the answer as content
+                    metadata={
+                        "file_type": "faq",
+                        "source": "faq_data.json",
+                        "domain": "QA",
+                        "question": faq_entry['question'],
+                        "answer": faq_entry['answer']
+                    }
+                )
+            )
+
+        print(f"Loaded {len(faq_documents)} FAQ documents.")
+        return faq_documents
+
+    except Exception as e:
+        print(f"Error processing FAQ file {file_path}: {e}")
+        return []
+    
 def ingest_docs():
     # Load PDF files
     rcm_pdf_folder_path = "./PDF_Docs/RCM Docs"
@@ -158,8 +197,11 @@ def ingest_docs():
     json_folder_path = "./JSON_Documents"
     json_documents = load_json_documents(json_folder_path)
 
+    faq_file_path = "./JSON_Documents/faq_data.json"
+    faq_documents = load_faq_documents(faq_file_path)
+
     # Combine all documents
-    all_documents = pdf_documents + json_documents
+    all_documents = pdf_documents + json_documents + faq_documents
 
     # Split PDF documents into chunks using RecursiveCharacterTextSplitter
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
@@ -169,6 +211,12 @@ def ingest_docs():
         if doc.metadata.get("file_type") in ["coding", "validation"]:
             # JSON documents: No chunking, add as-is
             split_documents.append(doc)
+
+
+        elif doc.metadata.get("file_type") == "faq":
+            # FAQ documents: Add directly without any processing
+            split_documents.append(doc)
+
         else:
             # For non-JSON documents (e.g., PDFs), use the splitter
             split_documents.extend(text_splitter.split_documents([doc]))
