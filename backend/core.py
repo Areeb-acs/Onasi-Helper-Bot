@@ -1,7 +1,5 @@
 from dotenv import load_dotenv
-from langchain.chains.retrieval import create_retrieval_chain
-from langchain.chains.history_aware_retriever import create_history_aware_retriever
-from langchain.prompts import ChatPromptTemplate
+
 
 # https://github.com/emarco177/documentation-helper/blob/2-retrieval-qa-finish/ingestion.py
 load_dotenv()
@@ -9,12 +7,16 @@ import re
 import os
 
 from langchain import hub
+from langchain.chains.retrieval import create_retrieval_chain
+from langchain.chains.history_aware_retriever import create_history_aware_retriever
+from langchain.prompts import ChatPromptTemplate
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_pinecone import Pinecone
 from langchain_groq import ChatGroq
 
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
+from .faq_bot import FAQBot
 
 INDEX_NAME = "rcm-final-app"
 embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")
@@ -253,3 +255,15 @@ def run_llm(query: str, chat_history, domain=None):
     })
 
     return result
+
+class ChatBot:
+    def __init__(self):
+        # Initialize FAQ bot
+        self.faq_bot = FAQBot("faq_data.json")
+
+    async def get_response(self, question: str) -> str:
+        """Get response using FAQ bot with chat model fallback"""
+        return await self.faq_bot.get_response(
+            question=question,
+            chat_model=self  # Pass self as chat model for fallback
+        )

@@ -1,10 +1,13 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
 from backend.core import run_llm
+from backend.faq_bot import FAQBot
 
 app = FastAPI()
 
-SUPPORTED_DOMAINS = {"RCM", "DHIS"}  # Add your supported domains here
+SUPPORTED_DOMAINS = {"RCM", "DHIS", "QA"}  # Add your supported domains here
+faq_bot = FAQBot("./JSON_Documents/faq_data.json")
+
 
 @app.get("/")
 async def get_root():
@@ -34,6 +37,21 @@ async def chat_endpoint(request: Request):
     # Validate the domain if specified
     if domain and domain not in SUPPORTED_DOMAINS:
         return {"error": f"Unsupported domain '{domain}'. Supported domains are: {', '.join(SUPPORTED_DOMAINS)}"}
+    
+    if domain == "QA":                 # Use FAQ bot for QA domain
+        response = await faq_bot.get_response(
+            question=question,
+            chat_model=None  # We don't need chat model fallback for FAQs
+        )
+
+        # Append question and response to chat history
+        chat_history.append(("human", question))
+        chat_history.append(("ai", response))
+
+        return {
+            "answer": response,
+            "chat_history": chat_history
+        }
 
     async def response_generator():
         # Generate response dynamically using run_llm with domain

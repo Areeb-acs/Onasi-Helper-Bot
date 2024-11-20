@@ -16,3 +16,4 @@ uvicorn
 fastapi
 langchain-pinecone
 streamlit-chat
+langchain
