@@ -16,7 +16,6 @@ from langchain_groq import ChatGroq
 
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
-from .faq_bot import FAQBot
 
 INDEX_NAME = "rcm-final-app"
 embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")

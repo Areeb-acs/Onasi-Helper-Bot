@@ -1,7 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
 from backend.core import run_llm
-from backend.faq_bot import FAQBot
 
 app = FastAPI()
 
