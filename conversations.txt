@@ -79,3 +79,7 @@ AI: <html>
 User: hello im areeb
 AI: <p>Pleasure to meet you, Areeb!</p>
 ==================================================
+
+User: hello
+AI: <p>Pleasure to meet you!</p>
+==================================================
