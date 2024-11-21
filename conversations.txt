@@ -153,3 +153,21 @@ AI: <html>
   </body>
 </html>
 ==================================================
+
+User: steps of rcm
+AI: <html>
+  <body>
+    <p>The steps of RCM are:</p>
+    <ul>
+      <li>Patient Registration</li>
+      <li>Verify Eligibility</li>
+      <li>Create and Submit Claim</li>
+      <li>Coding and Billing</li>
+      <li>Claims Submission</li>
+      <li>Payment Posting</li>
+      <li>Denial Management</li>
+      <li>Patient Collections</li>
+    </ul>
+  </body>
+</html>
+==================================================
