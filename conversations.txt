@@ -42,3 +42,11 @@ AI: <html>
 <p>To register a patient, navigate to 'Patient' > 'Patient Registration', click 'Add New', enter details in Personal Information, Insurance Information, and Benefits Information sections, and click 'Save'.</p>
 </html>
 ==================================================
+
+User: hello where am i
+AI: <html>
+  <body>
+    <p>Pleasure to meet you! You are currently in the Admin Dashboard of the RCM application.</p>
+  </body>
+</html>
+==================================================
