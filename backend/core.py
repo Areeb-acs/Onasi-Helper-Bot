@@ -152,7 +152,7 @@ def run_llm(query: str, chat_history, domain=None):
     qa_retriever = docsearch.as_retriever(
         search_kwargs={
             "filter": {"domain": "QA"},
-            "k": 2
+            "k": 3
         }
     )
     
@@ -166,8 +166,9 @@ def run_llm(query: str, chat_history, domain=None):
             qa_prompt = ChatPromptTemplate.from_template(
                 """
                 You are a helpful assistant. Answer the question based on the provided context only and in html format in bullet points where appropriate.
-                Use exact same wording
+                Use exact same wording as the context, do not change a word
                 If no relevant response, say I don't know.
+                Exact exact wording, pick only the most most relevant related response, like be very concise.
                 
                 Context:
                 {context}
@@ -181,9 +182,10 @@ def run_llm(query: str, chat_history, domain=None):
                 retriever=qa_retriever,
                 combine_docs_chain=stuff_documents_chain
             )
-
+            
             result = qa_chain.invoke({
-                "input": query
+                "input": query,
+                "chat_history": chat_history
             })
             
             # If the result contains "I don't know" or "I couldn't find", proceed to the next search
