@@ -1,3 +1,0 @@
-User: hello
-AI: <html><body><p>Hello! How can I assist you today?</p></body></html>
-==================================================
