@@ -28,3 +28,11 @@ AI: <html>
 <p>Revenue Cycle Management (RCM) is the process of managing a patient's financial journey through a series of structured steps to ensure efficient handling of healthcare services and payments.</p>
 </html>
 ==================================================
+
+User: what is RCM?
+AI: <html>
+  <body>
+    <p>Revenue Cycle Management (RCM) is the process of meticulously managing a patient's financial journey through a series of structured steps to ensure efficient handling of healthcare services and payments.</p>
+  </body>
+</html>
+==================================================
