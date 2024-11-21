@@ -142,22 +142,18 @@ def is_conversation_start(chat_history):
 
 def run_llm(query: str, chat_history, domain=None):
     """
-    Main pipeline for processing user queries with priority for FAQ/QA domain
+    Main pipeline for processing user queries with priority for FAQ / QA domain
     """
     # Initialize Pinecone with embeddings
     docsearch = Pinecone(index_name=INDEX_NAME, embedding=embeddings)
     chat = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-70b-8192")
-
-
-
-    # If a meaningful response is found, return it immediately
 
     # If no domain is specified, search all documents without a filter
     if not domain:
         domain_retriever = docsearch.as_retriever(
             search_kwargs={
                 "filter": {},  # No domain filter
-                "k": 5
+                "k": 3
             }
         )
     else:
@@ -165,9 +161,10 @@ def run_llm(query: str, chat_history, domain=None):
         domain_retriever = docsearch.as_retriever(
             search_kwargs={
                 "filter": {"domain": domain},
-                "k": 5
+                "k": 3
             }
         )
+
     # Rest of your existing code for domain-specific search
     retrieval_qa_chat_prompt = ChatPromptTemplate.from_template(
         """
@@ -216,15 +213,19 @@ def run_llm(query: str, chat_history, domain=None):
         prompt=rephrase_prompt
     )
     
-    result = parameter_based_search(query, docsearch, num_chunks=3)
-    additional_context = "\n".join([doc.page_content for doc in result])
+    # Skip parameter search if query contains "hello"
+    if "hello" in query.lower():
+        additional_context = ""
+    else:
+        result = parameter_based_search(query, docsearch, num_chunks=3)
+        additional_context = "\n".join([doc.page_content for doc in result])
+    
+    query_with_context = f"{query}\n\nAdditional Context:\n{additional_context}"
     
     stuff_documents_chain = create_stuff_documents_chain(
         chat,
         retrieval_qa_chat_prompt
     )
-    
-    query_with_context = f"{query}\n\nAdditional Context:\n{additional_context}"
     
     qa = create_retrieval_chain(
         retriever=history_aware_retriever,
