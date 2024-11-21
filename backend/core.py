@@ -148,145 +148,95 @@ def run_llm(query: str, chat_history, domain=None):
     docsearch = Pinecone(index_name=INDEX_NAME, embedding=embeddings)
     chat = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-70b-8192")
 
-    # First, try to find matches in QA domain
-    qa_retriever = docsearch.as_retriever(
-        search_kwargs={
-            "filter": {"domain": "QA"},
-            "k": 3
-        }
+
+
+    # If a meaningful response is found, return it immediately
+
+    # If no domain is specified, search all documents without a filter
+    if not domain:
+        domain_retriever = docsearch.as_retriever(
+            search_kwargs={
+                "filter": {},  # No domain filter
+                "k": 5
+            }
+        )
+    else:
+        # Use domain-specific search
+        domain_retriever = docsearch.as_retriever(
+            search_kwargs={
+                "filter": {"domain": domain},
+                "k": 5
+            }
+        )
+    # Rest of your existing code for domain-specific search
+    retrieval_qa_chat_prompt = ChatPromptTemplate.from_template(
+        """
+        You are a very friendly conversational chatbot that remembers context across a conversation. Use the provided conversation history to understand the user's question and provide clear, concise, and accurate responses for users.
+        Only answer based on given context and if context not relevant, please say I do not know. Please give shortest answers possible to questions unless asked otherwise.
+        Do not make up answers. Provide direct responses without any explanatory notes or parenthetical comments.
+        Never ever share username and passwords.
+
+        Instructions:
+        Provide direct responses without any explanatory notes or parenthetical comments.
+        Please provide output in html format having bullet points, paragraph breaks, neat bullet points.
+        Only answer based on given context.
+
+        1. If there is any NULL character or empty string, then replace that with no information found.
+        2.If no relevant response, say I don't know.
+        3.Exact exact wording, pick only the most most relevant related response, like be very concise.
+        4. Always output the response in html not in plain text
+        5. Always refer to the conversation history for context and maintain continuity in your responses but please be direct.
+        6. By default, your answers should not be more than 2 sentences, unless user asks for detailed information, if there is no information, say you do not know.
+
+        Context from documents:
+        {context}
+
+        Current Query:
+        {input}
+        """
     )
     
-    # Get QA domain results
-    qa_docs = qa_retriever.get_relevant_documents(query)
+    rephrase_prompt = ChatPromptTemplate.from_template( 
+    """
+    Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question.
+    Please keep the response in a neat format always using bullet points and breaking down things into sections.
+
+    Chat History:
+    {chat_history}
+
+    Follow Up Input: {input}
+
+    Standalone Question:
+    """
+    )
     
-    if qa_docs:
-        qa_context = "\n".join([doc.page_content for doc in qa_docs])
-        if qa_context.strip():  # Check if we have meaningful content
-            # Use the QA-specific prompt
-            qa_prompt = ChatPromptTemplate.from_template(
-                """
-                You are a helpful assistant. Answer the question based on the provided context only and in html format in bullet points where appropriate.
-                Use exact same wording as the context, do not change a word
-                If no relevant response, say I don't know.
-                Exact exact wording, pick only the most most relevant related response, like be very concise.
-                
-                Context:
-                {context}
+    history_aware_retriever = create_history_aware_retriever(
+        llm=chat,
+        retriever=domain_retriever,
+        prompt=rephrase_prompt
+    )
+    
+    result = parameter_based_search(query, docsearch, num_chunks=3)
+    additional_context = "\n".join([doc.page_content for doc in result])
+    
+    stuff_documents_chain = create_stuff_documents_chain(
+        chat,
+        retrieval_qa_chat_prompt
+    )
+    
+    query_with_context = f"{query}\n\nAdditional Context:\n{additional_context}"
+    
+    qa = create_retrieval_chain(
+        retriever=history_aware_retriever,
+        combine_docs_chain=stuff_documents_chain
+    )
+    
+    result = qa.invoke({
+        "input": query_with_context,
+        "chat_history": chat_history,
+    })
+    
+    return result
 
-                Question: {input}
-                """
-            )
-
-            stuff_documents_chain = create_stuff_documents_chain(chat, qa_prompt)
-            qa_chain = create_retrieval_chain(
-                retriever=qa_retriever,
-                combine_docs_chain=stuff_documents_chain
-            )
-            
-            result = qa_chain.invoke({
-                "input": query,
-                "chat_history": chat_history
-            })
-            
-            # If the result contains "I don't know" or "I couldn't find", proceed to the next search
-            if result and ("I don't know" in result["answer"] or "I couldn't find" in result["answer"]):
-                pass  # Ignore this result and continue
-            else:
-                # If a meaningful response is found, return it immediately
-                return result
-
-            # If a meaningful response is found, return it immediately
-        
-            # If no domain is specified, search all documents without a filter
-            if not domain:
-                domain_retriever = docsearch.as_retriever(
-                    search_kwargs={
-                        "filter": {},  # No domain filter
-                        "k": 5
-                    }
-                )
-            else:
-                # Use domain-specific search
-                domain_retriever = docsearch.as_retriever(
-                    search_kwargs={
-                        "filter": {"domain": domain},
-                        "k": 5
-                    }
-                )
-            # Rest of your existing code for domain-specific search
-            retrieval_qa_chat_prompt = ChatPromptTemplate.from_template(
-                """
-                You are a friendly conversational chatbot that remembers context across a conversation. Use the provided conversation history to understand the user's question and provide clear, concise, and accurate responses for users.
-                Only answer based on given context and if context not relevant, please say I do not know. Please give shortest answers possible to questions unless asked otherwise.
-                Do not make up answers. Provide direct responses without any explanatory notes or parenthetical comments.
-                Never ever share username and passwords.
-
-                Instructions:
-                Provide direct responses without any explanatory notes or parenthetical comments.
-                Please provide output in html format having bullet points, paragraph breaks, neat bullet points.
-                Only answer based on given context.
-
-                1. If there is any NULL character or empty string, then replace that with no information found.
-                2.If no relevant response, say I don't know.
-                3.Exact exact wording, pick only the most most relevant related response, like be very concise.
-                4. Always output the response in html not in plain text
-                5. Always refer to the conversation history for context and maintain continuity in your responses but please be direct.
-                6. By default, your answers should not be more than 2 sentences, unless user asks for detailed information, if there is no information, say you do not know.
-
-                Context from documents:
-                {context}
-
-                Current Query:
-                {input}
-                """
-            )
-            
-            rephrase_prompt = ChatPromptTemplate.from_template( 
-            """
-            Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question.
-            Please keep the response in a neat format always using bullet points and breaking down things into sections.
-
-            Chat History:
-            {chat_history}
-
-            Follow Up Input: {input}
-
-            Standalone Question:
-            """
-            )
-            
-            history_aware_retriever = create_history_aware_retriever(
-                llm=chat,
-                retriever=domain_retriever,
-                prompt=rephrase_prompt
-            )
-            
-            result = parameter_based_search(query, docsearch, num_chunks=3)
-            additional_context = "\n".join([doc.page_content for doc in result])
-            
-            stuff_documents_chain = create_stuff_documents_chain(
-                chat,
-                retrieval_qa_chat_prompt
-            )
-            
-            query_with_context = f"{query}\n\nAdditional Context:\n{additional_context}"
-            
-            qa = create_retrieval_chain(
-                retriever=history_aware_retriever,
-                combine_docs_chain=stuff_documents_chain
-            )
-            
-            result = qa.invoke({
-                "input": query_with_context,
-                "chat_history": chat_history,
-            })
-            
-            return result
-
-        # If no matches found in either QA or domain-specific search
-        return {
-            "answer": "<p>I'm sorry, I couldn't find a relevant answer to your question.</p>",
-            "chat_history": chat_history
-        }
 
     # If no matches found in QA domain
