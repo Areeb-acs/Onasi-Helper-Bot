@@ -41,3 +41,11 @@ AI: <html>
 User: Please give me information pharmacy modeule
 AI: I don't have information on this.
 ==================================================
+
+User: what is RCM?
+AI: <html>
+  <body>
+    <p>Revenue Cycle Management (RCM) is the process of managing the patient's financial journey through a series of structured steps to ensure efficient handling of healthcare services and payments.</p>
+  </body>
+</html>
+==================================================
