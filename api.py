@@ -27,11 +27,14 @@ async def chat_endpoint(request: Request):
     if not question:
         return {"error": "Question is required."}
 
-    # First check if there's a direct match in FAQ data
+    # First, check if there's a direct match in FAQ data
     for qa_pair in faq_data:
         if question.lower() in qa_pair["question"].lower():
-            # If exact match found in FAQ, return the answer immediately
-            return qa_pair["answer"]
+            # If an exact match is found in FAQ, return the answer without quotation marks
+            answer = qa_pair["answer"]
+            # Remove double quotes from the answer
+            answer = answer.replace('"', '')
+            return answer
 
     # If no FAQ match, proceed with normal processing
     # Determine domain dynamically if not provided
