@@ -5,3 +5,11 @@ AI: <html><body><p>Hello! How can I assist you today?</p></body></html>
 User: my name is areeb
 AI: <p>Pleasure to meet you, Areeb!</p>
 ==================================================
+
+User: I have registerde my patient, what hsould i do next
+AI: <html>
+  <body>
+    <p>Since you have registered your patient, next you should verify the patient's insurance eligibility by sending an eligibility request.</p>
+  </body>
+</html>
+==================================================
