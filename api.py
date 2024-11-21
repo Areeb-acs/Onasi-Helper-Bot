@@ -6,7 +6,8 @@ import json
 import os
 
 app = FastAPI()
-
+# File to store conversations
+CONVERSATION_LOG_FILE = "conversations.txt"
 SUPPORTED_DOMAINS = {"RCM", "DHIS"}
 
 # Initialize ChatGroq
@@ -23,6 +24,16 @@ Answer to format: {answer}
 # Load FAQ data
 with open("./faq_data.json", "r") as f:
     faq_data = json.load(f)
+
+
+def log_conversation(user_query, ai_response):
+    """
+    Logs the conversation to a local text file.
+    """
+    with open(CONVERSATION_LOG_FILE, "a", encoding="utf-8") as f:
+        f.write("User: " + user_query + "\n")
+        f.write("AI: " + ai_response + "\n")
+        f.write("="*50 + "\n")  # Separator for readability
 
 @app.get("/")
 async def get_root():
@@ -45,11 +56,13 @@ async def chat_endpoint(request: Request):
         if question.lower() in qa_pair["question"].lower():
             # If an exact match is found in FAQ, format the answer in HTML
             raw_answer = qa_pair["answer"]
-            
+                        # Log conversation
+            log_conversation(question, raw_answer)
             # Use ChatGroq to format the answer in HTML
             formatted_response = chat.invoke(
                 HTML_PROMPT_TEMPLATE.format(answer=raw_answer)
             )
+                        # Log conversation
             
             # Return HTML response
             return HTMLResponse(content=formatted_response.content)
@@ -71,6 +84,7 @@ async def chat_endpoint(request: Request):
     async def response_generator():
         generated_response = run_llm(query=question, chat_history=chat_history, domain=domain)
         answer = generated_response.get("answer", "")
+        log_conversation(question, answer)
         for chunk in answer:
             yield chunk
 

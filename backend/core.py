@@ -183,7 +183,7 @@ def run_llm(query: str, chat_history, domain=None):
 
         1. If there is any NULL character or empty string, then replace that with no information found.
         2. If no relevant response, say I don't know.
-        3.Exact exact wording, pick only the most most relevant related response, like be very concise.
+        3. Exact exact wording, pick only the most most relevant related response, like be very concise.
         4. Always output the response in html not in plain text
         5. Always refer to the conversation history for context and maintain continuity in your responses but please be direct.
         6. By default, your answers should not be more than 2 sentences, unless user asks for detailed information, if there is no information, say you do not know.
