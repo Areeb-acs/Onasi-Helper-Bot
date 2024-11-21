@@ -25,3 +25,15 @@ AI: <p>I don't know.</p>
 User: I need work
 AI: <p>I don't know.</p>
 ==================================================
+
+User: please write in detail about the Onasi RCM application
+AI: <html>
+<p>The Onasi RCM application is a Revenue Cycle Management system that manages the patient's financial journey through a series of structured steps. The process begins with patient registration, where comprehensive patient information is collected, including personal details, insurance coverage, and benefits.</p>
+<ul>
+<li>Register Patient: Enter patient's personal, insurance, and benefits information and save the patient details in the system.</li>
+<li>Verify Eligibility: Check patient's insurance eligibility by sending an eligibility request and wait for the response from the insurance provider.</li>
+<li>Create and Submit Claim: Once eligibility is confirmed, create a new claim for the patient.</li>
+</ul>
+<p>The system ensures efficient handling of healthcare services and payments through accurate data entry and structured steps.</p>
+</html>
+==================================================
