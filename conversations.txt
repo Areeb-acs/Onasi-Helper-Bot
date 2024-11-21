@@ -145,3 +145,11 @@ AI: <html>
   </body>
 </html>
 ==================================================
+
+User: benefits of RCM
+AI: <html>
+  <body>
+    <p>The benefits of RCM include efficient handling of healthcare services and payments.</p>
+  </body>
+</html>
+==================================================
