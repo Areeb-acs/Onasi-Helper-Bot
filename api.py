@@ -1,11 +1,24 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, HTMLResponse
 from backend.core import run_llm
+from langchain_groq import ChatGroq
 import json
+import os
 
 app = FastAPI()
 
 SUPPORTED_DOMAINS = {"RCM", "DHIS"}
+
+# Initialize ChatGroq
+groq_api_key = os.getenv("GROQ_API_KEY")
+chat = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-70b-8192")
+
+# HTML formatting prompt template
+HTML_PROMPT_TEMPLATE = """
+Please use the answer and keep it exactly the same, just change to html format ONLY.
+Answer to format: {answer}
+
+"""
 
 # Load FAQ data
 with open("./faq_data.json", "r") as f:
@@ -30,11 +43,16 @@ async def chat_endpoint(request: Request):
     # First, check if there's a direct match in FAQ data
     for qa_pair in faq_data:
         if question.lower() in qa_pair["question"].lower():
-            # If an exact match is found in FAQ, return the answer without quotation marks
-            answer = qa_pair["answer"]
-            # Remove double quotes from the answer
-            answer = answer.replace('"', '')
-            return answer
+            # If an exact match is found in FAQ, format the answer in HTML
+            raw_answer = qa_pair["answer"]
+            
+            # Use ChatGroq to format the answer in HTML
+            formatted_response = chat.invoke(
+                HTML_PROMPT_TEMPLATE.format(answer=raw_answer)
+            )
+            
+            # Return HTML response
+            return HTMLResponse(content=formatted_response.content)
 
     # If no FAQ match, proceed with normal processing
     # Determine domain dynamically if not provided
