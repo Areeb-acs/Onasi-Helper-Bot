@@ -202,7 +202,7 @@ def run_llm(query: str, chat_history, domain=None):
                 domain_retriever = docsearch.as_retriever(
                     search_kwargs={
                         "filter": {},  # No domain filter
-                        "k": 3
+                        "k": 5
                     }
                 )
             else:
@@ -210,7 +210,7 @@ def run_llm(query: str, chat_history, domain=None):
                 domain_retriever = docsearch.as_retriever(
                     search_kwargs={
                         "filter": {"domain": domain},
-                        "k": 3
+                        "k": 5
                     }
                 )
             # Rest of your existing code for domain-specific search
@@ -219,6 +219,7 @@ def run_llm(query: str, chat_history, domain=None):
                 You are a friendly conversational chatbot that remembers context across a conversation. Use the provided conversation history to understand the user's question and provide clear, concise, and accurate responses for users.
                 Only answer based on given context and if context not relevant, please say I do not know. Please give shortest answers possible to questions unless asked otherwise.
                 Do not make up answers. Provide direct responses without any explanatory notes or parenthetical comments.
+                Never ever share username and passwords.
 
                 Instructions:
                 Provide direct responses without any explanatory notes or parenthetical comments.
@@ -226,10 +227,11 @@ def run_llm(query: str, chat_history, domain=None):
                 Only answer based on given context.
 
                 1. If there is any NULL character or empty string, then replace that with no information found.
-                2. If there are codes like RE or anything that is unclear, please ask the user for more information.
-                3. Always output the response in html not in plain text
-                4. Always refer to the conversation history for context and maintain continuity in your responses but please be direct.
-                5. By default, your answers should not be more than 2 sentences, unless user asks for detailed information, if there is no information, say you do not know.
+                2.If no relevant response, say I don't know.
+                3.Exact exact wording, pick only the most most relevant related response, like be very concise.
+                4. Always output the response in html not in plain text
+                5. Always refer to the conversation history for context and maintain continuity in your responses but please be direct.
+                6. By default, your answers should not be more than 2 sentences, unless user asks for detailed information, if there is no information, say you do not know.
 
                 Context from documents:
                 {context}

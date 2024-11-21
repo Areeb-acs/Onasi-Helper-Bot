@@ -1,10 +1,15 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
 from backend.core import run_llm
+import json
 
 app = FastAPI()
 
 SUPPORTED_DOMAINS = {"RCM", "DHIS"}
+
+# Load FAQ data
+with open("./faq_data.json", "r") as f:
+    faq_data = json.load(f)
 
 @app.get("/")
 async def get_root():
@@ -22,6 +27,13 @@ async def chat_endpoint(request: Request):
     if not question:
         return {"error": "Question is required."}
 
+    # First check if there's a direct match in FAQ data
+    for qa_pair in faq_data:
+        if question.lower() in qa_pair["question"].lower():
+            # If exact match found in FAQ, return the answer immediately
+            return {"answer": qa_pair["answer"], "chat_history": chat_history}
+
+    # If no FAQ match, proceed with normal processing
     # Determine domain dynamically if not provided
     if not domain:
         if "RCM" in question:
@@ -36,11 +48,8 @@ async def chat_endpoint(request: Request):
         return {"error": f"Unsupported domain '{domain}'. Supported domains are: {', '.join(SUPPORTED_DOMAINS)}"}
 
     async def response_generator():
-        # Generate response using run_llm with domain
-        # run_llm will handle the QA check first for RCM domain
         generated_response = run_llm(query=question, chat_history=chat_history, domain=domain)
         answer = generated_response.get("answer", "")
-        # Stream the response in chunks
         for chunk in answer:
             yield chunk
 
