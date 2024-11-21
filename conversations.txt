@@ -1,3 +1,20 @@
 User: hello
 AI: <html><body><p>Hello! How can I assist you today?</p></body></html>
 ==================================================
+User: Im Areeb
+AI: I'm happy to help! However, it seems like your query "Im Areeb" doesn't provide any context or information for me to work with. It appears to be a statement rather than a question.
+
+Could you please rephrase or provide more context so I can better understand and assist you?
+==================================================
+User: Im Areeb
+AI: <p>Pleasure to meet you, Areeb!</p>
+==================================================
+User: Im Areeb
+AI: <p>Pleasure to meet you, Areeb!</p>
+==================================================
+User: Im Areeb
+AI: <p>Pleasure to meet you, Areeb!</p>
+==================================================
+User: Im Areeb
+AI: <p>Pleasure to meet you, Areeb!</p>
+==================================================
