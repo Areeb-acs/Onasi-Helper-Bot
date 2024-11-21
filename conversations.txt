@@ -103,3 +103,7 @@ AI: - Click on the user icon in the top-right corner.
 User: my name is atif
 AI: <p>Pleasure to meet you, Atif!</p>
 ==================================================
+
+User: What happens if eligibility verification fails?
+AI: You will receive an error message detailing the issue. Review the patient's insurance details and try again.
+==================================================
