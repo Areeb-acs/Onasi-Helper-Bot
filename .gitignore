@@ -4,6 +4,5 @@
 *.env
 *.docx
 /Word_Documents
-*.txt
 /Text Files
 /PDF_Docs
