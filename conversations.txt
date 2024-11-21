@@ -107,3 +107,41 @@ AI: <p>Pleasure to meet you, Atif!</p>
 User: What happens if eligibility verification fails?
 AI: You will receive an error message detailing the issue. Review the patient's insurance details and try again.
 ==================================================
+
+User: can you give me details of RCM in bullet points
+AI: <html>
+  <body>
+    <p>Here are the details of RCM in bullet points:</p>
+    <ul>
+      <li>Patient Registration:
+        <ul>
+          <li>Enter patient's personal, insurance, and benefits information</li>
+          <li>Save patient details in the system</li>
+        </ul>
+      </li>
+      <li>Verify Eligibility:
+        <ul>
+          <li>Check patient's insurance eligibility by sending an eligibility request</li>
+          <li>Wait for response from insurance provider</li>
+        </ul>
+      </li>
+      <li>Create and Submit Claim:
+        <ul>
+          <li>Create new claim for patient once eligibility is confirmed</li>
+        </ul>
+      </li>
+      <li>RCM process includes:
+        <ul>
+          <li>Patient registration</li>
+          <li>Insurance (Patient Eligibility) verification</li>
+          <li>Coding and billing</li>
+          <li>Claims submission</li>
+          <li>Payment posting</li>
+          <li>Denial management</li>
+          <li>Patient collections</li>
+        </ul>
+      </li>
+    </ul>
+  </body>
+</html>
+==================================================
