@@ -37,3 +37,7 @@ AI: <html>
 <p>The system ensures efficient handling of healthcare services and payments through accurate data entry and structured steps.</p>
 </html>
 ==================================================
+
+User: Please give me information pharmacy modeule
+AI: I don't have information on this.
+==================================================
