@@ -36,3 +36,9 @@ AI: <html>
   </body>
 </html>
 ==================================================
+
+User: Register the patient?
+AI: <html>
+<p>To register a patient, navigate to 'Patient' > 'Patient Registration', click 'Add New', enter details in Personal Information, Insurance Information, and Benefits Information sections, and click 'Save'.</p>
+</html>
+==================================================
