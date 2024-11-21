@@ -87,3 +87,7 @@ AI: <p>Pleasure to meet you!</p>
 User: please increase the font size
 AI: <p>I don't know.</p>
 ==================================================
+
+User: What is the login process?
+AI: The login process involves entering your registered credentials to access the system's functionalities.
+==================================================
