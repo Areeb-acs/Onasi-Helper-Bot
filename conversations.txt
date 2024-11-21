@@ -67,3 +67,11 @@ AI: <html>
 <p>Now that you have registered your patient, you should verify their eligibility by sending an eligibility request and waiting for the response from the insurance provider.</p>
 </html>
 ==================================================
+
+User: hello
+AI: <html>
+  <body>
+    <p>Pleasure to meet you!</p>
+  </body>
+</html>
+==================================================
