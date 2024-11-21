@@ -31,7 +31,7 @@ async def chat_endpoint(request: Request):
     for qa_pair in faq_data:
         if question.lower() in qa_pair["question"].lower():
             # If exact match found in FAQ, return the answer immediately
-            return {"answer": qa_pair["answer"], "chat_history": chat_history}
+            return qa_pair["answer"]
 
     # If no FAQ match, proceed with normal processing
     # Determine domain dynamically if not provided
