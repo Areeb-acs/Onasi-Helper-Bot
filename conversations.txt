@@ -50,3 +50,14 @@ AI: <html>
   </body>
 </html>
 ==================================================
+
+User: Tell me about RCM app, what is onasi, what is RCM, who are you, IM areeb btw
+AI: <html>
+  <body>
+    <p>Pleasure to meet you, Areeb!</p>
+    <p>Onasi is a Revenue Cycle Management (RCM) application.</p>
+    <p>RCM is a process that manages the patient's financial journey through a series of structured steps to ensure efficient handling of healthcare services and payments.</p>
+    <p>I am a friendly conversational chatbot, here to assist you with your queries about RCM and Onasi application.</p>
+  </body>
+</html>
+==================================================
