@@ -17,3 +17,7 @@ AI: <html>
 User: hello
 AI: <p>Pleasure to meet you!</p>
 ==================================================
+
+User: I need work
+AI: <p>I don't know.</p>
+==================================================
