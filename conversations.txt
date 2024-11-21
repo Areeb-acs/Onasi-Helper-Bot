@@ -91,3 +91,11 @@ AI: <p>I don't know.</p>
 User: What is the login process?
 AI: The login process involves entering your registered credentials to access the system's functionalities.
 ==================================================
+
+User: How do I change my password?
+AI: - Click on the user icon in the top-right corner.
+- Select 'Change Password.'
+- Enter your username, old password, and new password.
+- Confirm the new password by re-entering it.
+- Click 'Update.'
+==================================================
