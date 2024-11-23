@@ -248,3 +248,14 @@ AI: <html>
   </body>
 </html>
 ==================================================
+
+User: tell me about DHIS please
+AI: <html>
+<p>The Dental Healthcare Information System (DHIS) is a comprehensive application designed to streamline and enhance clinical workflows, appointment management, patient recordkeeping, and administrative tasks in dental clinics.</p>
+<ul>
+<li>It's an all-in-one platform that caters to multiple roles and workflows within a dental clinic or hospital environment.</li>
+<li>Its modular design ensures that tasks specific to various roles are seamlessly integrated into the system.</li>
+<li>Key objectives include automating and streamlining workflows, reducing manual errors and increasing operational efficiency.</li>
+</ul>
+</html>
+==================================================
