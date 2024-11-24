@@ -103,3 +103,9 @@ AI: <p>For codevalue 12, the details found are: Press the Search button to searc
 User: What are the details found for codevalue 12
 AI: <p>For codevalue 12, the details found are: Press the Search button to search the data.</p>
 ==================================================
+
+User: How do I navigate the Admin Dashboard?
+AI: - Click on the 'Dashboard' module.
+- Use filters like Request Type, Status, or Date Range.
+- Click 'Search' to view the data.
+==================================================
