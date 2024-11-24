@@ -369,11 +369,11 @@ def run_llm(query: str, chat_history, domain=None):
     #     additional_context = "\n".join([doc.page_content for doc in result])
     
 
-    sql_query = generate_sql_query(query)
-    results = fetch_query_results(sql_query)
-    print(results)
+    # sql_query = generate_sql_query(query)
+    # results = fetch_query_results(sql_query)
+    # print(results)
 
-    query_with_context = f"{query}\n\nAdditional Context:\n{results}"
+    # query_with_context = f"{query}\n\nAdditional Context:\n{results}"
 
     
     stuff_documents_chain = create_stuff_documents_chain(
