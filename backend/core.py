@@ -362,18 +362,18 @@ def run_llm(query: str, chat_history, domain=None):
     )
     
     # # Skip parameter search if query contains "hello"
-    # if "hello" in query.lower():
-    #     additional_context = ""
-    # else:
-    #     result = parameter_based_search(query, docsearch, num_chunks=3)
-    #     additional_context = "\n".join([doc.page_content for doc in result])
+    if "hello" in query.lower():
+        additional_context = ""
+    else:
+        result = parameter_based_search(query, docsearch, num_chunks=3)
+        additional_context = "\n".join([doc.page_content for doc in result])
     
 
     # sql_query = generate_sql_query(query)
     # results = fetch_query_results(sql_query)
     # print(results)
 
-    # query_with_context = f"{query}\n\nAdditional Context:\n{results}"
+    query_with_context = f"{query}\n\nAdditional Context:\n{results}"
 
     
     stuff_documents_chain = create_stuff_documents_chain(
