@@ -16,7 +16,9 @@ from langchain_groq import ChatGroq
 
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 import json
-
+import pyodbc
+import json
+import os
 import os
 import pyodbc
 
@@ -160,16 +162,21 @@ def fetch_query_results(sql_query: str):
     Returns:
         str: JSON string containing the query results.
     """
+
+
     # Define connection parameters
     server = os.getenv("SERVER_NAME")  # Replace with your server name/IP
-    database = os.getenv("database") # Replace with your database name
+    database = os.getenv("DATABASE_NAME")  # Replace with your database name
+    username = os.getenv("DB_USERNAME")  # Replace with your username
+    password = os.getenv("DB_PASSWORD")  # Replace with your password
 
     # Create the connection string
     connection_string = (
         f"DRIVER={{ODBC Driver 17 for SQL Server}};"
         f"SERVER={server};"
         f"DATABASE={database};"
-        "Trusted_Connection=yes;"
+        f"UID={username};"
+        f"PWD={password};"
     )
 
     try:
@@ -311,6 +318,8 @@ def run_llm(query: str, chat_history, domain=None):
 
         - If the user asks any irrelevant question to the context provided or asks about Pharmacy or any issue separate to RCM or DHIS application, then please say I do not have information on this.
         Don't hallucinate please. If the user tells his or her name, reply with pleasure to meet you.
+        
+        - If you cannot find any relevant answer, just say I don't know.
 
         Instructions:
         Provide direct responses without any explanatory notes or parenthetical comments.

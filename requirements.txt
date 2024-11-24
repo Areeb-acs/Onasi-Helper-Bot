@@ -1,10 +1,10 @@
 langchain_openai 
 langchain_core
+pyodbc
 python-dotenv
 streamlit
 langchain_community
 pypdf
-faiss-cpu
 groq
 langchain-groq
 langchainhub
