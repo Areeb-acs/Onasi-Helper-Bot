@@ -320,6 +320,8 @@ def run_llm(query: str, chat_history, domain=None):
         Don't hallucinate please. If the user tells his or her name, reply with pleasure to meet you.
         
         - If you cannot find any relevant answer, just say I don't know.
+        - Never say that you will output result in html, never tell the user. You are direct, to the point, anything that the user does not need to know,
+        don't mention.
 
         Instructions:
         Provide direct responses without any explanatory notes or parenthetical comments.
