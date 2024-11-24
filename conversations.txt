@@ -259,3 +259,16 @@ AI: <html>
 </ul>
 </html>
 ==================================================
+
+User: I have registerde my patient, what hsould i do next, pleaser give in bylletpoints
+AI: <html>
+<body>
+<p>Since you've registered your patient, here's what you should do next:</p>
+<ul>
+<li>Navigate to the Claim section.</li>
+<li>Specify the Subtype (Outpatient or Inpatient).</li>
+<li>Enter all the details in the Claim section.</li>
+</ul>
+</body>
+</html>
+==================================================
