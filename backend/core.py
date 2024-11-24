@@ -15,6 +15,12 @@ from langchain_pinecone import Pinecone
 from langchain_groq import ChatGroq
 
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+import json
+
+import os
+import pyodbc
+
+
 
 
 INDEX_NAME = "rcm-final-app"
@@ -46,6 +52,9 @@ def get_all_documents(vector_store, domain=None):
     
 
     return all_docs  # Ensure these are Document objects
+
+
+
 
 def parameter_based_search(query, vector_store, num_chunks=15, file_type=None, domain=None):
     """
@@ -140,6 +149,133 @@ def is_conversation_start(chat_history):
     """
     return not chat_history or len(chat_history) == 0
 
+
+def fetch_query_results(sql_query: str):
+    """
+    Function to connect to SQL Server, execute a dynamically provided query, and return the results in JSON format.
+    
+    Args:
+        sql_query (str): The SQL query to execute.
+    
+    Returns:
+        str: JSON string containing the query results.
+    """
+    # Define connection parameters
+    server = os.getenv("SERVER_NAME")  # Replace with your server name/IP
+    database = os.getenv("database") # Replace with your database name
+
+    # Create the connection string
+    connection_string = (
+        f"DRIVER={{ODBC Driver 17 for SQL Server}};"
+        f"SERVER={server};"
+        f"DATABASE={database};"
+        "Trusted_Connection=yes;"
+    )
+
+    try:
+        # Establish the connection
+        conn = pyodbc.connect(connection_string)
+        cursor = conn.cursor()
+        print("Connection established successfully.")
+
+        # Execute the SQL query
+        cursor.execute(sql_query)
+
+        # Fetch all results
+        rows = cursor.fetchall()
+
+        # Get column names from the cursor description
+        columns = [column[0] for column in cursor.description]
+
+        # Convert rows into a list of dictionaries
+        results = [dict(zip(columns, row)) for row in rows]
+
+        # Close the cursor and connection
+        cursor.close()
+        conn.close()
+
+        # Convert the results to a JSON string
+        return json.dumps(results, indent=4)
+
+    except pyodbc.Error as e:
+        print("Error in connection or query execution:", e)
+        return json.dumps({"error": str(e)})  # Return error as JSON
+
+
+def generate_sql_query(query: str, chat_history=None):
+    """
+    Generate an SQL query based on the user query using a specialized prompt template.
+    
+    Args:
+        query (str): The user query to generate the SQL query for.
+        chat_history (list): Conversation history for context (optional).
+        
+    Returns:
+        str: Generated SQL query.
+    """
+    # Initialize the ChatGroq LLM
+    chat = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-70b-8192")
+
+    # SQL generation-specific prompt tuned for the given dataset
+    sql_generation_prompt = ChatPromptTemplate.from_template(
+        """
+        You are an SQL expert working with a dataset named [AreebBlogDB].[dbo].[RCM_dataset].
+        The table contains the following columns:
+        - [TypeId]: Integer representing the type ID.
+        - [TypeCategory]: String representing the category of the type.
+        - [TypeName]: String representing the name of the type.
+        - [Description]: String describing the type.
+        - [CodeValue]: Integer representing the code value.
+        - [CodeDisplayValue]: String representing the display value of the code.
+        - [CodeDefinition]: String providing the definition of the code.
+        - [LongDescription]: String providing additional details (can be NULL).
+
+        Based on the user's query, generate an accurate SQL query to retrieve the required data.
+        Ensure the query is precise and adheres to SQL Server syntax.
+        
+        Instructions:
+        - Only generate SQL queries relevant to the [AreebBlogDB].[dbo].[RCM_dataset] table.
+        - If a WHERE condition is required, include it based on the user's query.
+        - If unsure about the query, respond with "I do not know."
+        - Do not provide explanations, only return the SQL query.
+
+        User Query:
+        {input}
+        """
+    )
+
+    # Prepare the input for the LLM
+    input_with_context = query
+    if chat_history:
+        input_with_context += f"\n\nChat History:\n{chat_history}"
+
+    # Use format_prompt to prepare the prompt
+    prompt_value = sql_generation_prompt.format_prompt(input=input_with_context)
+
+    # Invoke the LLM to generate the SQL query
+    response = chat.invoke(prompt_value.to_messages())
+
+    # Debugging: Print raw response
+    print("Raw LLM Response:", response)
+
+    # Extract and sanitize the response content
+    if hasattr(response, "content"):
+        raw_query = response.content.strip()
+
+        # Remove any wrapping backticks or quotes
+        sanitized_query = raw_query.strip("`\"'")
+
+        # Validate that the response contains a valid SQL SELECT statement
+        if "select" in sanitized_query.lower() and "from" in sanitized_query.lower():
+            return sanitized_query
+        else:
+            raise ValueError(f"Generated query is not a valid SELECT statement: {sanitized_query}")
+    else:
+        print(f"Unexpected response type: {type(response)}")
+        raise ValueError("Unexpected response format from LLM.")
+
+
+
 def run_llm(query: str, chat_history, domain=None):
     """
     Main pipeline for processing user queries with priority for FAQ / QA domain
@@ -178,11 +314,10 @@ def run_llm(query: str, chat_history, domain=None):
 
         Instructions:
         Provide direct responses without any explanatory notes or parenthetical comments.
-        Please provide output in html format having bullet points, paragraph breaks, neat bullet points.
+        Please provide output using html tags having bullet points, paragraph breaks, neat bullet points but DO NOT put the <html> tag at the start, just other tags.
 
         1. If there is any NULL character or empty string, then replace that with no information found.
         2. If no relevant response, say I don't know.
-        3. Exact exact wording, pick only the most most relevant related response, like be very concise.
         4. Always output the response in html not in plain text
         5. Always refer to the conversation history for context and maintain continuity in your responses but please be direct.
         6. By default, your answers should not be more than 2 sentences, unless user asks for detailed information, if there is no information, say you do not know.
@@ -215,14 +350,20 @@ def run_llm(query: str, chat_history, domain=None):
         prompt=rephrase_prompt
     )
     
-    # Skip parameter search if query contains "hello"
-    if "hello" in query.lower():
-        additional_context = ""
-    else:
-        result = parameter_based_search(query, docsearch, num_chunks=3)
-        additional_context = "\n".join([doc.page_content for doc in result])
+    # # Skip parameter search if query contains "hello"
+    # if "hello" in query.lower():
+    #     additional_context = ""
+    # else:
+    #     result = parameter_based_search(query, docsearch, num_chunks=3)
+    #     additional_context = "\n".join([doc.page_content for doc in result])
     
-    query_with_context = f"{query}\n\nAdditional Context:\n{additional_context}"
+
+    sql_query = generate_sql_query(query)
+    results = fetch_query_results(sql_query)
+    print(results)
+
+    query_with_context = f"{query}\n\nAdditional Context:\n{results}"
+
     
     stuff_documents_chain = create_stuff_documents_chain(
         chat,
