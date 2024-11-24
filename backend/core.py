@@ -373,7 +373,7 @@ def run_llm(query: str, chat_history, domain=None):
     # results = fetch_query_results(sql_query)
     # print(results)
 
-    query_with_context = f"{query}\n\nAdditional Context:\n{results}"
+    query_with_context = f"{query}\n\nAdditional Context:\n{additional_context}"
 
     
     stuff_documents_chain = create_stuff_documents_chain(
