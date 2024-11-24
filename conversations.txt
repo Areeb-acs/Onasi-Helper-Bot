@@ -126,3 +126,181 @@ AI: <html>
 </ul>
 </html>
 ==================================================
+User: What are the details found for codevalue 12
+AI: <p>For code value 12, the details found are:</p>
+<ul>
+  <li>Type Id: 1</li>
+  <li>Type Category: Codings</li>
+  <li>Type Name: benefit-category</li>
+  <li>Description: Standard Codings Given By Nphies</li>
+  <li>Code Display value: Adjunctive Dental Services</li>
+  <li>Code Definition: Adjunctive Dental Services.</li>
+  <li>Long Description: no information found</li>
+</ul>
+==================================================
+User: What are the details found for codevalue 10
+AI: <p>Based on the context, the details found for code value 10 are:</p>
+<ul>
+  <li>Type Id: 1</li>
+  <li>Type Category: Codings</li>
+  <li>Type Name: benefit-category</li>
+  <li>Description: Standard Codings Given By Nphies</li>
+  <li>Code Value: 10</li>
+  <li>Code Display Value: Endodontics</li>
+  <li>Code Definition: Endodontics.</li>
+  <li>Long Description: no information found</li>
+</ul>
+==================================================
+User: What are the details found for codevalue 5
+AI: <p>For code value 5, the details found are:</p>
+<ul>
+  <li>Type Id: 1</li>
+  <li>Type Category: Codings</li>
+  <li>Type Name: benefit-category</li>
+  <li>Description: Standard Codings Given By Nphies</li>
+  <li>Code Display Value: Diagnostic Lab</li>
+  <li>Code Definition: Diagnostic Lab.</li>
+  <li>Long Description: no information found</li>
+</ul>
+==================================================
+User: What are the details found for codevalue 20
+AI: <p>For code value 20, the details found are:</p>
+<ul>
+  <li>Type Id: 1</li>
+  <li>Type Category: Codings</li>
+  <li>Type Name: benefit-category</li>
+  <li>Description: Standard Codings Given By Nphies</li>
+  <li>Code Display Value: In-vitro Fertilization</li>
+  <li>Code Definition: In-vitro Fertilization.</li>
+  <li	Long Description: no information found</li>
+</ul>
+==================================================
+User: What are the details found for codevalue 3
+AI: <p>For code value 3, the details found are:</p>
+<ul>
+  <li>Type Id: 1</li>
+  <li>Type Category: Codings</li>
+  <li>Type Name: benefit-category</li>
+  <li>Description: Standard Codings Given By Nphies</li>
+  <li>Code Display value: Consultation</li>
+  <li>Code Definition: Consultation.</li>
+  <li>Long Description: no information found</li>
+</ul>
+==================================================
+User: What are the details found for codevalue 3
+AI: <p>For codevalue 3, the details found are:</p>
+<ul>
+  <li>Type Id: 1</li>
+  <li>Type Category: Codings</li>
+  <li>Type Name: benefit-category</li>
+  <li>Description: Standard Codings Given By Nphies</li>
+  <li>Code Display value: Consultation</li>
+  <li>CodeDefinition: Consultation.</li>
+  <li>Long Description: no information found</li>
+</ul>
+==================================================
+User: What are the details found for codevalue 3
+AI: <p>No information found.</p>
+==================================================
+User: What are the details found for codevalue 20
+AI: <p>No information found for codevalue 20.</p>
+==================================================
+User: What are the details found for codevalue 1
+AI: I don't know.
+==================================================
+User: What are the details found for codevalue 1
+AI: I don't know.
+==================================================
+User: What are the details found for codevalue 15
+AI: <p>Based on the provided context, the details found for codevalue 15 are:</p>
+<ul>
+  <li>Click the Settings module.</li>
+  <li>User can search any package on clicking the Packages page.</li>
+  <li>User can add a new package by pressing the Add New button.</li>
+</ul>
+==================================================
+User: What are the details found for codevalue 15
+AI: <p>Based on the context provided, the details found for code value 15 are the steps to add a new package in the Settings module.</p>
+<ul>
+  <li>Enter Package Name.</li>
+  <li>Select Product & Services from the drop-down menu.</li>
+  <li>Select Service Code from the drop-down menu and enter Remarks if required.</li>
+  <li>User can enter the details in the Product & Services section from here.</li>
+  <li>User can add more by pressing the plus icon.</li>
+  <li>User can delete any record from here.</li>
+</ul>
+==================================================
+User: What are the details found for codevalue 12
+AI: <p>Based on the provided context, codevalue 12 refers to "Press the Search button to search the data." Therefore, the details found are the doctor details that can be viewed after searching.</p>
+==================================================
+User: What are the details found for codevalue 12
+AI: <p>Based on the provided context, the details found for codevalue 12 are related to <b>Insurance</b>.</p>
+==================================================
+User: What are the details found for codevalue 12
+AI: <p>Based on the context, codevalue 12 refers to Insurance.</p>
+==================================================
+User: What are the details found for codevalue 12
+AI: <p>For codevalue 12, the details found are related to Insurance.</p>
+==================================================
+User: What are the details found for codevalue 12
+AI: <p>Based on the provided context, the details found for codevalue 12 are related to <b>Insurance</b>.</p>
+==================================================
+User: What are the details found for codevalue 12
+AI: <p>Based on the context provided, codevalue 12 corresponds to <b>Insurance</b>.</p>
+==================================================
+User: What are the details found for codevalue 12
+AI: <p>Details found for codevalue 12: Insurance</p>
+==================================================
+User: What are the details found for codevalue 12
+AI: <p>For codevalue 12, the details found are:</p>
+<ul>
+    <li>Enter Doctor Name or License#</li>
+    <li>Press the Search button to search the data.</li>
+</ul>
+==================================================
+User: What are the details found for codevalue 12
+AI: <p>For codevalue 12, the details found are:</p>
+<ul>
+  <li>Enter Doctor Name or License#</li>
+  <li>Press the Search button to search the data.</li>
+  <li>User can view the doctor details from here.</li>
+</ul>
+==================================================
+User: What are the details found for codevalue 12
+AI: I do not know.
+==================================================
+User: What are the details found for codevalue 12
+AI: <p>I don't know.</p>
+==================================================
+User: What are the details found for codevalue 12
+AI: I don't know.
+==================================================
+User: What are the details found for codevalue 12
+AI: I do not know.
+==================================================
+User: What are the details found for codevalue 12
+AI: I don't know.
+==================================================
+User: What are the details found for codevalue 12
+AI: I don't know.
+==================================================
+User: What are the details found for codevalue 12
+AI: I don't know.
+==================================================
+User: What are the details found for codevalue 12
+AI: I don't know.
+==================================================
+User: What are the details found for codevalue 12
+AI: I don't know.
+==================================================
+User: What are the details found for codevalue 12
+AI: <p>For codevalue 12, the details are:</p>
+<ul>
+  <li>TypeCategory: Codings</li>
+  <li>TypeName: benefit-category</li>
+  <li>Description: Standard Codings Given By Nphies</li>
+  <li>CodeDisplayValue: Adjunctive Dental Services</li>
+  <li>CodeDefinition: Adjunctive Dental Services.</li>
+  <li>LongDescription: no information found</li>
+</ul>
+==================================================

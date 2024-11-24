@@ -4,16 +4,19 @@ FROM python:3.9-slim
 # Set the working directory in the container
 WORKDIR /app
 
-# Install ODBC and dependencies for pyodbc
-# Install ODBC, SSL certificates, and dependencies for pyodbc
+# Install required packages, including gnupg for apt-key
 RUN apt-get update && apt-get install -y \
+    gnupg \
     unixodbc \
     unixodbc-dev \
     libodbc1 \
     libgssapi-krb5-2 \
     ca-certificates \
-    && apt-get clean && update-ca-certificates
-
+    curl && \
+    curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
+    curl https://packages.microsoft.com/config/debian/10/prod.list > /etc/apt/sources.list.d/mssql-release.list && \
+    apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql17 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copy the requirements file
 COPY requirements.txt .

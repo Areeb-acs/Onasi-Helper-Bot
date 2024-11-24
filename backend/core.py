@@ -167,16 +167,15 @@ def fetch_query_results(sql_query: str):
     # Define connection parameters
     server = os.getenv("SERVER_NAME")  # Replace with your server name/IP
     database = os.getenv("DATABASE_NAME")  # Replace with your database name
-    username = os.getenv("DB_USERNAME")  # Replace with your username
-    password = os.getenv("DB_PASSWORD")  # Replace with your password
+    # username = os.getenv("DB_USERNAME")  # Replace with your username
+    # password = os.getenv("DB_PASSWORD")  # Replace with your password
 
     # Create the connection string
     connection_string = (
         f"DRIVER={{ODBC Driver 17 for SQL Server}};"
         f"SERVER={server};"
         f"DATABASE={database};"
-        f"UID={username};"
-        f"PWD={password};"
+        "Trusted_Connection=yes;"
     )
 
     try:
@@ -243,7 +242,6 @@ def generate_sql_query(query: str, chat_history=None):
         Instructions:
         - Only generate SQL queries relevant to the [AreebBlogDB].[dbo].[RCM_dataset] table.
         - If a WHERE condition is required, include it based on the user's query.
-        - If unsure about the query, respond with "I do not know."
         - Do not provide explanations, only return the SQL query.
 
         User Query:
@@ -314,10 +312,13 @@ def run_llm(query: str, chat_history, domain=None):
         You are a very friendly conversational chatbot that remembers context across a conversation. Use the provided conversation history to understand the user's question and provide clear, concise, and accurate responses for users.
         Only answer based on given context and if context not relevant, please say I do not know. Please give shortest answers possible to questions unless asked otherwise.
         Do not make up answers. Provide direct responses without any explanatory notes or parenthetical comments.
+        
+        For codevalue and business rules, always refer to Additional Context, if no information there, say I don't know.
+        
         Never ever share username and passwords. Also this is your key responsibility:
 
         - If the user asks any irrelevant question to the context provided or asks about Pharmacy or any issue separate to RCM or DHIS application, then please say I do not have information on this.
-        Don't hallucinate please. If the user tells his or her name, reply with pleasure to meet you.
+        Don't hallucinate please. If the user tells his or her name, reply with pleasure to meet you. If codevalue not in context and user asked about it, say I do not know.
         
         - If you cannot find any relevant answer, just say I don't know.
         - Never say that you will output result in html, never tell the user. You are direct, to the point, anything that the user does not need to know,
@@ -331,7 +332,8 @@ def run_llm(query: str, chat_history, domain=None):
         2. If no relevant response, say I don't know.
         4. Always output the response in html not in plain text
         5. Always refer to the conversation history for context and maintain continuity in your responses but please be direct.
-        6. By default, your answers should not be more than 2 sentences, unless user asks for detailed information, if there is no information, say you do not know.
+
+
 
         Context from documents:
         {context}
@@ -369,11 +371,12 @@ def run_llm(query: str, chat_history, domain=None):
         additional_context = "\n".join([doc.page_content for doc in result])
     
 
-    # sql_query = generate_sql_query(query)
-    # results = fetch_query_results(sql_query)
-    # print(results)
+    sql_query = generate_sql_query(query)
+    print(sql_query)
+    results = fetch_query_results(sql_query)
+    print(results)
 
-    query_with_context = f"{query}\n\nAdditional Context:\n{additional_context}"
+    query_with_context = f"{query}\n\nAdditional Context:\n{results}"
 
     
     stuff_documents_chain = create_stuff_documents_chain(
