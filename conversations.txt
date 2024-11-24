@@ -272,3 +272,7 @@ AI: <html>
 </body>
 </html>
 ==================================================
+
+User: I have registerde my patient, what hsould i do next
+AI: <p>Since you have registered your patient, the next step would be to <b>Verify Eligibility</b> by sending an eligibility request and waiting for the response from the insurance provider.</p>
+==================================================
