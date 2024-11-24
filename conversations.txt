@@ -113,3 +113,16 @@ AI: - Click on the 'Dashboard' module.
 User: plz response in bullet point
 AI: I'm ready to assist you. Please go ahead and ask your question. I'll respond in HTML format with bullet points and paragraph breaks.
 ==================================================
+
+User: How do I navigate the Admin Dashboard? respond in bullet points
+AI: <html>
+<p>To navigate the Admin Dashboard:</p>
+<ul>
+  <li>Click on the Dashboard module and the user is navigated to the Dashboard.</li>
+  <li>Select Request Type, Status or Start/End Date Ranges from the drop down list.</li>
+  <li>Press the Search button to search the data.</li>
+  <li>Related graphical depiction of New Request Status, Error Status, Cancel Request Status, Completed Request Status, All Requests and All Request Count will be displayed below.</li>
+  <li>User can also view, print & download it from here.</li>
+</ul>
+</html>
+==================================================
