@@ -109,3 +109,7 @@ AI: - Click on the 'Dashboard' module.
 - Use filters like Request Type, Status, or Date Range.
 - Click 'Search' to view the data.
 ==================================================
+
+User: plz response in bullet point
+AI: I'm ready to assist you. Please go ahead and ask your question. I'll respond in HTML format with bullet points and paragraph breaks.
+==================================================
