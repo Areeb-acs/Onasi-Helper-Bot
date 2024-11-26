@@ -348,7 +348,7 @@ def run_llm(query: str, chat_history, domain=None):
         4. Always refer to the conversation history for context and maintain continuity in your responses but please be direct.
         5. Always always breakdown long answers into bullet points nicely formatted in HTML.
 
-
+        BASIC RULE: ALWAYS OUTPUT IN HTML, ALWAYS, REGARDLESS OF CONVERSATIONAL HISTORY AND CONTEXT
 
         Context from documents:
         {context}
