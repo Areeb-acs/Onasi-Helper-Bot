@@ -329,3 +329,7 @@ AI: <p>Now that you have registered your patient, you can:</p>
   <li>Click on the save button to save the information.</li>
 </ul>
 ==================================================
+
+User: hello
+AI: <p>Pleasure to meet you!</p>
+==================================================
