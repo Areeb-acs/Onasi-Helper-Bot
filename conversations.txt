@@ -316,3 +316,16 @@ AI: I don't know.
 User: What are the details found for codevalue 12
 AI: I don't know.
 ==================================================
+
+User: I have registerde my patient, what hsould i do next
+AI: <p>Now that you have registered your patient, you can:</p>
+<ul>
+  <li>Add all the details in the Claim section.</li>
+  <li>Specify the Subtype whether it's for Outpatient or Inpatient.</li>
+  <li>Enter details in the Personal Information section.</li>
+  <li>Enter details in the Insurance Information section.</li>
+  <li>Enter details in the Benefits Information section.</li>
+  <li>Add data in the Details section.</li>
+  <li>Click on the save button to save the information.</li>
+</ul>
+==================================================
