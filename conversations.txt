@@ -304,3 +304,15 @@ AI: <p>For codevalue 12, the details are:</p>
   <li>LongDescription: no information found</li>
 </ul>
 ==================================================
+User: What are the details found for codevalue 12
+AI: <p>I don't know</p>
+==================================================
+User: What are the details found for codevalue 12
+AI: <p>I don't know.</p>
+==================================================
+User: What are the details found for codevalue 12
+AI: I don't know.
+==================================================
+User: What are the details found for codevalue 12
+AI: I don't know.
+==================================================

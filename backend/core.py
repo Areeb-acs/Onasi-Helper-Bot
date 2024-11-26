@@ -171,12 +171,21 @@ def fetch_query_results(sql_query: str):
     # password = os.getenv("DB_PASSWORD")  # Replace with your password
 
     # Create the connection string
+    # connection_string = (
+    #     f"DRIVER={{ODBC Driver 17 for SQL Server}};"
+    #     f"SERVER={server};"
+    #     f"DATABASE={database};"
+    #     # f"UID={username};"
+    #     # f"PWD={password};"
+    # )
+
     connection_string = (
         f"DRIVER={{ODBC Driver 17 for SQL Server}};"
         f"SERVER={server};"
         f"DATABASE={database};"
-        "Trusted_Connection=yes;"
+        f"Trusted_Connection=yes;"
     )
+
 
     try:
         # Establish the connection
@@ -225,8 +234,9 @@ def generate_sql_query(query: str, chat_history=None):
     # SQL generation-specific prompt tuned for the given dataset
     sql_generation_prompt = ChatPromptTemplate.from_template(
         """
-        You are an SQL expert working with a dataset named [AreebBlogDB].[dbo].[RCM_dataset].
+        You are an SQL expert working with a dataset named RCM_dataset. First check the query, see if it related to any columns below, if so only then generate a sql query  
         The table contains the following columns:
+
         - [TypeId]: Integer representing the type ID.
         - [TypeCategory]: String representing the category of the type.
         - [TypeName]: String representing the name of the type.
@@ -240,8 +250,9 @@ def generate_sql_query(query: str, chat_history=None):
         Ensure the query is precise and adheres to SQL Server syntax.
         
         Instructions:
-        - Only generate SQL queries relevant to the [AreebBlogDB].[dbo].[RCM_dataset] table.
+        - Only generate SQL queries relevant to the RCM_dataset table.
         - If a WHERE condition is required, include it based on the user's query.
+        - If you determine no need for a sql query, please output None     
         - Do not provide explanations, only return the SQL query.
 
         User Query:
@@ -274,10 +285,12 @@ def generate_sql_query(query: str, chat_history=None):
         if "select" in sanitized_query.lower() and "from" in sanitized_query.lower():
             return sanitized_query
         else:
-            raise ValueError(f"Generated query is not a valid SELECT statement: {sanitized_query}")
+            return "None"
+            # raise ValueError(f"Generated query is not a valid SELECT statement: {sanitized_query}")
     else:
         print(f"Unexpected response type: {type(response)}")
-        raise ValueError("Unexpected response format from LLM.")
+        return "None"
+        # raise ValueError("Unexpected response format from LLM.")
 
 
 
@@ -313,7 +326,8 @@ def run_llm(query: str, chat_history, domain=None):
         Only answer based on given context and if context not relevant, please say I do not know. Please give shortest answers possible to questions unless asked otherwise.
         Do not make up answers. Provide direct responses without any explanatory notes or parenthetical comments.
         
-        For codevalue and business rules, always refer to Additional Context, if no information there, say I don't know.
+        For codevalue and business validation rules, always refer to Additional Context, if no information there, say I don't know.
+        For lengthy responses, please provide response in bullet points.
         
         Never ever share username and passwords. Also this is your key responsibility:
 
@@ -330,8 +344,9 @@ def run_llm(query: str, chat_history, domain=None):
 
         1. If there is any NULL character or empty string, then replace that with no information found.
         2. If no relevant response, say I don't know.
-        4. Always output the response in html not in plain text
-        5. Always refer to the conversation history for context and maintain continuity in your responses but please be direct.
+        3. Always output the response in html not in plain text
+        4. Always refer to the conversation history for context and maintain continuity in your responses but please be direct.
+        5. Always always breakdown long answers into bullet points nicely formatted in HTML.
 
 
 
@@ -343,57 +358,78 @@ def run_llm(query: str, chat_history, domain=None):
         """
     )
     
-    rephrase_prompt = ChatPromptTemplate.from_template( 
-    """
-    Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question.
-    Please keep the response in a neat format always using bullet points and breaking down things into sections.
+    # Define a rephrasing prompt to transform follow-up questions into standalone questions.
+    rephrase_prompt = ChatPromptTemplate.from_template(
+        """
+        Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question.
+        Please keep the response in a neat format always using bullet points and breaking down things into sections.
 
-    Chat History:
-    {chat_history}
+        Chat History:
+        {chat_history}
 
-    Follow Up Input: {input}
+        Follow Up Input: {input}
 
-    Standalone Question:
-    """
+        Standalone Question:
+        """
     )
-    
+
+    # Create a history-aware retriever that combines the LLM, retriever, and rephrasing prompt.
+    # This ensures that user queries consider the context of the entire chat history.
     history_aware_retriever = create_history_aware_retriever(
-        llm=chat,
-        retriever=domain_retriever,
-        prompt=rephrase_prompt
+        llm=chat,  # The language model to process queries
+        retriever=domain_retriever,  # Retrieves relevant documents based on the query
+        prompt=rephrase_prompt  # Prompt used for rephrasing follow-up questions
     )
-    
-    # # Skip parameter search if query contains "hello"
-    if "hello" in query.lower():
-        additional_context = ""
-    else:
-        result = parameter_based_search(query, docsearch, num_chunks=3)
-        additional_context = "\n".join([doc.page_content for doc in result])
-    
 
+    # Commented out code for skipping parameter-based search on trivial queries like "hello".
+    # If the query contains "hello", the context is skipped; otherwise, additional context is fetched.
+    # if "hello" in query.lower():
+    #     additional_context = ""
+    # else:
+    #     result = parameter_based_search(query, docsearch, num_chunks=3)
+    #     additional_context = "\n".join([doc.page_content for doc in result])
+
+    # Dynamically generate an SQL query based on the user's input.
     sql_query = generate_sql_query(query)
-    print(sql_query)
-    results = fetch_query_results(sql_query)
-    print(results)
 
+    # Debugging: Print the generated SQL query to verify its structure.
+    print(sql_query)
+
+    # Validate the SQL query before execution.
+    # Only proceed with database interaction if the query is valid and starts with "SELECT".
+    if sql_query and sql_query.strip().lower().startswith("select"):
+        # Fetch results from the database for valid SQL queries.
+        results = fetch_query_results(sql_query)
+    else:
+        # Handle invalid or None queries by providing a default response.
+        results = 'No Additional Context Found'
+        # Log skipped execution for debugging purposes.
+        print("Skipped execution: Invalid SQL query generated or query is None.")
+
+    # Combine the original user query with the additional context (e.g., database results).
     query_with_context = f"{query}\n\nAdditional Context:\n{results}"
 
-    
+    # Create a document chain for retrieval-based question-answering.
+    # This chain combines the LLM and the defined QA prompt to process queries effectively.
     stuff_documents_chain = create_stuff_documents_chain(
-        chat,
-        retrieval_qa_chat_prompt
+        chat,  # The language model used for generating responses
+        retrieval_qa_chat_prompt  # Prompt for retrieval-based QA
     )
-    
+
+    # Create a QA chain that integrates the history-aware retriever and the document chain.
+    # This chain processes user queries in light of conversation history and retrieved documents.
     qa = create_retrieval_chain(
-        retriever=history_aware_retriever,
-        combine_docs_chain=stuff_documents_chain
+        retriever=history_aware_retriever,  # Retrieves context-aware responses
+        combine_docs_chain=stuff_documents_chain  # Combines document context into the response
     )
-    
+
+    # Execute the QA chain with the provided query and chat history.
     result = qa.invoke({
-        "input": query_with_context,
-        "chat_history": chat_history,
+        "input": query_with_context,  # Input query enriched with additional context
+        "chat_history": chat_history,  # Maintains the conversation context
     })
-    
+
+    # Return the result generated by the QA chain.
     return result
 
 
