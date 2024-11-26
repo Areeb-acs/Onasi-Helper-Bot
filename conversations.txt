@@ -333,3 +333,7 @@ AI: <p>Now that you have registered your patient, you can:</p>
 User: hello
 AI: <p>Pleasure to meet you!</p>
 ==================================================
+
+User: what is RCM?
+AI: <p>In Revenue Cycle Management (RCM), the patient's financial journey is meticulously managed through a series of structured steps to ensure efficient handling of healthcare services and payments.</p>
+==================================================
