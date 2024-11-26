@@ -345,3 +345,16 @@ AI: <p>Revenue Cycle Management (RCM) is a process that meticulously manages a p
 User: tell me about DHIS please
 AI: I don't have information on this.
 ==================================================
+
+User: eligibility is what? respond in bullets plz
+AI: <p>Eligibility is:</p>
+<ul>
+  <li>Verify patient's benefits</li>
+  <li>Check coverage validation</li>
+  <li>Discover coverage</li>
+  <li>Determine priority</li>
+  <li>Select location</li>
+  <li>Add date range</li>
+  <li>Check transfer or new born (if applicable)</li>
+</ul>
+==================================================
