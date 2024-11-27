@@ -51,6 +51,23 @@ SUPPORTED_DOMAINS = {"RCM", "DHIS"}
 # A global dictionary to store session-specific chat histories in memory
 session_chat_histories = {}
 
+
+def fetch_github_file():
+    """
+    Fetch the content of the conversations.txt file from GitHub.
+    """
+    url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{FILE_PATH}"
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+    response = requests.get(url, headers=headers)
+
+    if response.status_code == 200:
+        file_info = response.json()
+        file_content = base64.b64decode(file_info["content"]).decode("utf-8")
+        return file_content
+    else:
+        print(f"Error fetching file from GitHub: {response.json()}")
+        return None
+
 def fetch_file_sha():
     """
     Fetch the SHA of the file on GitHub (required for updates).
@@ -114,7 +131,7 @@ def get_last_ten_conversations(session_id):
     """
     Reads the last ten interactions from the conversations.txt file on GitHub for the specified session_id.
     """
-    file_content = fetch_file_sha()
+    file_content = fetch_github_file()
     if not file_content:
         return []
 
