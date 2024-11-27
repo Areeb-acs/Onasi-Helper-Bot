@@ -421,3 +421,30 @@ AI: <p>Here are the details about the eligibility verification process:</p>
   <li>Close button will close the form</li>
 </ul>
 ==================================================
+
+User: Need details about eligibility verification process with bullets
+AI: <p>To verify eligibility, follow these steps:</p>
+<ul>
+<li>Click on the eligibility icon</li>
+<li>Request Eligibility pop-up appears</li>
+<li>Select your preferences:
+    <ul>
+        <li>Coverage benefits</li>
+        <li>Coverage Validation</li>
+        <li>Coverage Discovery</li>
+        <li>Coverage Discovery + Coverage benefits</li>
+    </ul>
+</li>
+<li>Select Priority from the drop-down list</li>
+<li>Select Location from the drop-down list</li>
+<li>Add Date Range</li>
+<li>Select checkbox:
+    <ul>
+        <li>Transfer</li>
+        <li>New Born (enabled only when the patient's age is less than 90 days)</li>
+    </ul>
+</li>
+<li>Press the Send Eligibility button</li>
+<li>Close button will close the form</li>
+</ul>
+==================================================
