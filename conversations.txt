@@ -582,3 +582,7 @@ AI: <p>The eligibility verification process involves the following steps:</p>
   <li>Close button will close the form</li>
 </ul>
 ==================================================
+
+User: what is RCM?
+AI: <p>Revenue Cycle Management (RCM) is the process of managing a patient's financial journey through a series of structured steps to ensure efficient handling of healthcare services and payments.</p>
+==================================================
