@@ -332,6 +332,7 @@ def run_llm(query: str, chat_history, domain=None):
                 "k": 10
             }
         )
+
     else:
         # Use domain-specific search
         domain_retriever = docsearch.as_retriever(
@@ -341,7 +342,8 @@ def run_llm(query: str, chat_history, domain=None):
             }
         )
 
-    
+
+
      # Format the chat history for inclusion
     formatted_history = format_chat_history(chat_history)
     # Rest of your existing code for domain-specific search
@@ -353,13 +355,14 @@ def run_llm(query: str, chat_history, domain=None):
         Do not make up answers. Provide direct responses without any explanatory notes or parenthetical comments.
         
         
+
+        
         For codevalue and business validation rules, always refer to Additional Context, if no information there, say I don't know.
         For lengthy responses, please provide response in bullet points.
         
         Never ever share username and passwords. Also this is your key responsibility:
 
-            - If the user asks any irrelevant question to the context provided or asks about Pharmacy or any issue separate to RCM or DHIS application, then please say I do not have information on this.
-            Don't hallucinate please. If the user tells his or her name, reply appropriately. If codevalue not in context and user asked about it, say I do not know.
+            - Don't hallucinate please. If the user tells his or her name, reply appropriately. If codevalue not in context and user asked about it, say I do not know.
             
             - If you cannot find any relevant answer, just say I don't know.
             - Never say that you will output result in html, never tell the user. You are direct, to the point, anything that the user does not need to know,
