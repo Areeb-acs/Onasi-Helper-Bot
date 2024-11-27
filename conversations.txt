@@ -390,3 +390,7 @@ AI: <p>To submit the eligibility, press the Send Eligibility button after fillin
 User: need more details
 AI: <p>I don't know.</p>
 ==================================================
+
+User: tell me about DHIS please
+AI: I don't have information on this.
+==================================================
