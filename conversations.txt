@@ -483,3 +483,12 @@ AI: I don't have information on this.
 User: what is RCM?
 AI: <p>In Revenue Cycle Management (RCM), the patient's financial journey is meticulously managed through a series of structured steps to ensure efficient handling of healthcare services and payments.</p>
 ==================================================
+
+User: Need details about eligibility verification process with bullets
+AI: <p>Here are the details about the eligibility verification process:</p>
+<ul>
+  <li>Click on the eligibility icon</li>
+  <li>Insurance Eligibility Verification: Before services are rendered, the patient's insurance eligibility is confirmed by sending a request to the insurer.</li>
+  <li>This step verifies coverage details and identifies any prerequisites for service approval, reducing the risk of claim denials.</li>
+</ul>
+==================================================
