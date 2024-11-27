@@ -47,8 +47,6 @@ app = FastAPI()
 CONVERSATION_LOG_FILE = "conversations.txt"
 SUPPORTED_DOMAINS = {"RCM", "DHIS"}
 
-# Store chat history for each session
-chat_histories = {}
 
 
 def fetch_file_sha():
@@ -109,6 +107,35 @@ with open("./faq_data.json", "r") as f:
     faq_data = json.load(f)
 
 
+
+def get_last_five_conversations():
+    """
+    Reads the last five interactions from the conversations.txt file.
+    """
+    if not os.path.exists(CONVERSATION_LOG_FILE):
+        return []
+
+    with open(CONVERSATION_LOG_FILE, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+
+    # Split interactions based on separators
+    interactions = "".join(lines).split("=" * 50)
+    # Get the last five non-empty interactions
+    last_five = [interaction.strip() for interaction in interactions if interaction.strip()][-5:]
+
+    # Parse the last five interactions into a structured format
+    chat_history = []
+    for interaction in last_five:
+        user_line = next((line for line in interaction.splitlines() if line.startswith("User:")), None)
+        ai_line = next((line for line in interaction.splitlines() if line.startswith("AI:")), None)
+        if user_line and ai_line:
+            chat_history.append({
+                "user": user_line.replace("User: ", "").strip(),
+                "ai": ai_line.replace("AI: ", "").strip()
+            })
+
+    return chat_history
+
 def log_conversation(user_query, ai_response):
     """
     Logs the conversation to a local text file.
@@ -126,16 +153,14 @@ async def chat_endpoint(request: Request):
     # Parse request body
     data = await request.json()
     question = data.get("question")
-    chat_history = data.get("chat_history", [])
     domain = data.get("domain", None)
 
     # Ensure the required parameters are provided
     if not question:
         return {"error": "Question is required."}
 
-    # Check for a new session; reset chat history if empty
-    if not chat_history:
-        chat_history = []
+    # Retrieve the last five conversations from the log file
+    chat_history = get_last_five_conversations()
 
     # First, check if there's a direct match in FAQ data
     for qa_pair in faq_data:
@@ -183,7 +208,6 @@ async def chat_endpoint(request: Request):
 
         # Append the LLM-generated response to the chat history
         chat_history.append({"user": question, "ai": answer})
-
         # Yield chunks of the response for streaming
         for chunk in answer:
             yield chunk

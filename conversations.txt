@@ -1,29 +1,15 @@
-User: hello my name is areeb
-AI: <b>Hello Areeb!</b> It's nice to meet you. I'm here to assist you with any questions or concerns you may have about the RCM or DHIS application. What can I help you with today?
-==================================================
-User: hello my name is areeb
-AI: <b>Hello Areeb!</b> It's nice to meet you! How can I assist you today?
-==================================================
-User: hello my name is areeb
-AI: <p>Hello Areeb! It's nice to meet you. How can I assist you today with Onasi Revenue Cycle Management (RCM) or Dental Healthcare Information System (DHIS) applications?</p>
-==================================================
-User: hello my name is areeb
-AI: <b>Hello Areeb!</b> It's nice to meet you. I'm here to help you with any questions or concerns you may have about the RCM application or DHIS. Please feel free to ask me anything, and I'll do my best to assist you.
-==================================================
-User: hello my name is areeb
-AI: <p>Hello Areeb!</p>
-==================================================
-User: hello my name is areeb
-AI: <p>Hello Areeb!</p>
-
-How can I assist you today? Do you have any questions about the RCM application or DHIS?
-==================================================
-User: what is DHIS
+User: what is muy name
 AI: I don't know.
 ==================================================
-User: what is DHIS
-AI: <b>I don't know.</b>
+User: my name is areeb
+AI: <p>Hello Areeb!</p>
 ==================================================
-User: hellp Im areeb
-AI: <b>Hello Areeb!</b> It seems like you're having some trouble or have a question about the RCM or DHIS application. Please feel free to ask, and I'll do my best to assist you.
+User: what is my name
+AI: <p>I don't know.</p>
+==================================================
+User: what is my name
+AI: I don't know.
+==================================================
+User: what is my name
+AI: <p>Hello Areeb!</p>
 ==================================================
