@@ -358,3 +358,7 @@ AI: <p>Eligibility is:</p>
   <li>Check transfer or new born (if applicable)</li>
 </ul>
 ==================================================
+
+User: what is RCM?
+AI: <p>Revenue Cycle Management (RCM) is a process that meticulously manages a patient's financial journey through a series of structured steps to ensure efficient handling of healthcare services and payments.</p>
+==================================================
