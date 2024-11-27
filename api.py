@@ -133,24 +133,23 @@ async def chat_endpoint(request: Request):
     if not question:
         return {"error": "Question is required."}
 
-    # Check for new session and reset chat history if necessary
+    # Check for a new session; reset chat history if empty
     if not chat_history:
-        chat_history = []  # Reset to an empty list for a new session
-
-
+        chat_history = []
 
     # First, check if there's a direct match in FAQ data
     for qa_pair in faq_data:
         if question.lower() in qa_pair["question"].lower():
             raw_answer = qa_pair["answer"]
-            # Log conversation
+
+            # Log and append the conversation to chat history
             log_conversation(question, raw_answer)
             chat_history.append({"user": question, "ai": raw_answer})
 
-            # Update GitHub with new conversation
-            update_github_file(f"\nUser: {question}\nAI: {raw_answer}\n{'='*50}\n")
+            # Update GitHub with the new conversation
+            update_github_file(f"\nUser: {question}\nAI: {raw_answer}\n{'=' * 50}\n")
 
-            # Format response and return
+            # Format response for HTML and return
             formatted_response = chat.invoke(
                 HTML_PROMPT_TEMPLATE.format(answer=raw_answer)
             )
@@ -168,26 +167,24 @@ async def chat_endpoint(request: Request):
     if domain and domain not in SUPPORTED_DOMAINS:
         return {"error": f"Unsupported domain '{domain}'."}
 
-
     # Format the chat history for LLM processing
     formatted_history = format_chat_history(chat_history)
 
-
     async def response_generator():
-        # Generate response using run_llm
+        # Generate response using the run_llm pipeline
         generated_response = run_llm(query=question, chat_history=formatted_history, domain=domain)
         answer = generated_response.get("answer", "")
 
-            # Log the conversation
+        # Log the conversation
         log_conversation(question, answer)
 
-        # Update GitHub with new conversation
-        update_github_file(f"\nUser: {question}\nAI: {answer}\n{'='*50}\n")
+        # Update GitHub with the new conversation
+        update_github_file(f"\nUser: {question}\nAI: {answer}\n{'=' * 50}\n")
 
-        # Add new conversation turn to chat history
+        # Append the LLM-generated response to the chat history
         chat_history.append({"user": question, "ai": answer})
 
-        # Yield chunks of the response
+        # Yield chunks of the response for streaming
         for chunk in answer:
             yield chunk
 
