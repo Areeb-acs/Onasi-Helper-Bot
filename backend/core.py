@@ -351,6 +351,7 @@ def run_llm(query: str, chat_history, domain=None):
         5. Always always breakdown long answers into bullet points nicely formatted in HTML.
 
     BASIC RULE: ALWAYS OUTPUT IN HTML, ALWAYS, REGARDLESS OF CONVERSATIONAL HISTORY AND CONTEXT
+    BASIC RULE: ONLY ANSWER BASED ON PROVIDED CONTEXT.
 
         Context from documents:
         {context}
