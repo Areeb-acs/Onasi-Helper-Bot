@@ -7,6 +7,31 @@ import os
 from dotenv import load_dotenv
 import requests
 import base64
+
+
+def format_chat_history(chat_history):
+    """
+    Format the chat history into a readable string for inclusion in LLM input.
+    Supports lists of dictionaries or tuples.
+    """
+    if not chat_history:
+        return "No previous history."
+
+    formatted_history = ""
+    for i, entry in enumerate(chat_history):
+        if isinstance(entry, dict):  # If the entry is a dictionary
+            user_input = entry.get("user", "No input")
+            ai_response = entry.get("ai", "No response")
+        elif isinstance(entry, tuple) and len(entry) == 2:  # If the entry is a tuple with two elements
+            user_input, ai_response = entry
+        else:  # Fallback for unexpected structures
+            user_input = "Unknown format"
+            ai_response = "Unknown format"
+
+        formatted_history += f"\nTurn {i+1}:\nUser: {user_input}\nAI: {ai_response}\n"
+    
+    return formatted_history.strip()
+
 # Load environment variables
 load_dotenv()
 
@@ -96,7 +121,6 @@ def log_conversation(user_query, ai_response):
 @app.get("/")
 async def get_root():
     return {"message": "Welcome to Onasi Helper Bot!"}
-
 @app.post("/chat")
 async def chat_endpoint(request: Request):
     # Parse request body
@@ -109,13 +133,21 @@ async def chat_endpoint(request: Request):
     if not question:
         return {"error": "Question is required."}
 
+    # Check for new session and reset chat history if necessary
+    if not chat_history:
+        chat_history = []  # Reset to an empty list for a new session
+
+    # Format the chat history
+    formatted_history = format_chat_history(chat_history)
+
     # First, check if there's a direct match in FAQ data
     for qa_pair in faq_data:
         if question.lower() in qa_pair["question"].lower():
             raw_answer = qa_pair["answer"]
+            # Log conversation
             log_conversation(question, raw_answer)
 
-            # Update GitHub
+            # Update GitHub with new conversation
             update_github_file(f"\nUser: {question}\nAI: {raw_answer}\n{'='*50}\n")
 
             # Format response and return
@@ -137,13 +169,20 @@ async def chat_endpoint(request: Request):
         return {"error": f"Unsupported domain '{domain}'."}
 
     async def response_generator():
+        # Generate response using run_llm
         generated_response = run_llm(query=question, chat_history=chat_history, domain=domain)
         answer = generated_response.get("answer", "")
+
+        # Log the conversation
         log_conversation(question, answer)
 
-        # Update GitHub
+        # Update GitHub with new conversation
         update_github_file(f"\nUser: {question}\nAI: {answer}\n{'='*50}\n")
 
+        # Add new conversation turn to chat history
+        chat_history.append({"user": question, "ai": answer})
+
+        # Yield chunks of the response
         for chunk in answer:
             yield chunk
 
