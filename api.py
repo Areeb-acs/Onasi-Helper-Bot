@@ -112,16 +112,14 @@ with open("./faq_data.json", "r") as f:
 
 def get_last_ten_conversations(session_id):
     """
-    Reads the last five interactions from the conversations.txt file for the specified session_id.
+    Reads the last ten interactions from the conversations.txt file on GitHub for the specified session_id.
     """
-    if not os.path.exists(CONVERSATION_LOG_FILE):
+    file_content = fetch_github_file()
+    if not file_content:
         return []
 
-    with open(CONVERSATION_LOG_FILE, "r", encoding="utf-8") as f:
-        lines = f.readlines()
-
     # Split interactions based on separators
-    interactions = "".join(lines).split("=" * 50)
+    interactions = file_content.split("=" * 50)
     
     # Filter interactions by session_id
     relevant_interactions = [
@@ -130,10 +128,10 @@ def get_last_ten_conversations(session_id):
         if f"Session ID: {session_id}" in interaction
     ]
 
-    # Get the last five non-empty interactions
+    # Get the last ten non-empty interactions
     last_ten = relevant_interactions[-10:]
 
-    # Parse the last five interactions into a structured format
+    # Parse the last ten interactions into a structured format
     chat_history = []
     for interaction in last_ten:
         user_line = next((line for line in interaction.splitlines() if line.startswith("User:")), None)
