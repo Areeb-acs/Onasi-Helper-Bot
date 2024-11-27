@@ -386,3 +386,7 @@ AI: <p>In Revenue Cycle Management (RCM), the patient's financial journey is met
 User: how the eligibility is submitted
 AI: <p>To submit the eligibility, press the Send Eligibility button after filling in the necessary details.</p>
 ==================================================
+
+User: need more details
+AI: <p>I don't know.</p>
+==================================================
