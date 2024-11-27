@@ -595,3 +595,7 @@ AI: <p>Here are the details about the eligibility verification process:</p>
   <li>This step verifies coverage details and identifies any prerequisites for service approval, reducing the risk of claim denials.</li>
 </ul>
 ==================================================
+
+User: tell me about DHIS please
+AI: I don't have information on this.
+==================================================
