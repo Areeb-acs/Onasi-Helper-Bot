@@ -7,8 +7,89 @@ import os
 from dotenv import load_dotenv
 import requests
 import base64
-
+import logging
 from uuid import uuid4  # For generating unique session IDs
+
+import requests
+
+
+
+# Load environment variables
+load_dotenv()
+
+# GitHub Configuration
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+REPO_OWNER = os.getenv("REPO_OWNER")
+REPO_NAME = os.getenv("REPO_NAME")
+FILE_PATH = os.getenv("FILE_PATH")
+BRANCH = os.getenv("BRANCH", "main")
+
+app = FastAPI()
+# File to store conversations
+CONVERSATION_LOG_FILE = "conversations.txt"
+SUPPORTED_DOMAINS = {"RCM", "DHIS"}
+
+# A global dictionary to store session-specific chat histories in memory
+session_chat_histories = {}
+
+
+BUCKET_NAME = "onasi-chatbot"
+FILE_URL = "https://onasi-chatbot.s3.us-east-1.amazonaws.com/conversations.txt"
+
+
+
+
+
+
+
+
+
+def get_session_data(bucket_name, file_url, session_id):
+    """
+    Fetches the conversation data for a specific session ID from a publicly accessible S3 file.
+
+    Parameters:
+    - bucket_name (str): The name of the S3 bucket (not directly needed for the request).
+    - file_url (str): The full URL to the file in the S3 bucket.
+    - session_id (str): The session ID to filter the data.
+
+    Returns:
+    - str: The conversation data for the specified session ID.
+    """
+    try:
+        response = requests.get(file_url)
+        response.raise_for_status()  # Raise an error for unsuccessful requests
+        
+        # Split the file into sessions
+        sessions = response.text.split("==================================================")
+        
+        # Filter sessions for the given session_id
+        filtered_data = [
+            session.strip()
+            for session in sessions
+            if f"Session ID: {session_id}" in session
+        ]
+        
+        # Join the filtered sessions back into a single string
+        return "\n==================================================\n".join(filtered_data)
+    
+    except requests.exceptions.RequestException as e:
+        return f"An error occurred: {e}"
+
+
+
+
+
+
+
+
+
+
+def fetch_s3_file(session_id):
+    """Fetch interactions matching the given session ID from the public S3 file."""
+    chat_data = get_session_data(BUCKET_NAME, FILE_URL, session_id)
+    return chat_data
+
 
 def format_chat_history(chat_history):
     """
@@ -33,82 +114,26 @@ def format_chat_history(chat_history):
     
     return formatted_history.strip()
 
-# Load environment variables
-load_dotenv()
 
-# GitHub Configuration
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-REPO_OWNER = os.getenv("REPO_OWNER")
-REPO_NAME = os.getenv("REPO_NAME")
-FILE_PATH = os.getenv("FILE_PATH")
-BRANCH = os.getenv("BRANCH", "main")
+def update_s3_file(session_id, new_content):
+    """Upload or update session-specific file in S3."""
+    session_file_url = "https://onasi-chatbot.s3.us-east-1.amazonaws.com/conversations.txt"
+    try:
+        # Fetch current session-specific content
+        response = requests.get(session_file_url)
+        current_content = response.text if response.status_code == 200 else ""
 
-app = FastAPI()
-# File to store conversations
-CONVERSATION_LOG_FILE = "conversations.txt"
-SUPPORTED_DOMAINS = {"RCM", "DHIS"}
+        # Append new content
+        updated_content = current_content + new_content
 
-# A global dictionary to store session-specific chat histories in memory
-session_chat_histories = {}
-
-
-def fetch_github_file():
-    """
-    Fetch the content of the conversations.txt file from GitHub.
-    """
-    url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{FILE_PATH}"
-    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
-    response = requests.get(url, headers=headers)
-
-    if response.status_code == 200:
-        file_info = response.json()
-        file_content = base64.b64decode(file_info["content"]).decode("utf-8")
-        return file_content
-    else:
-        print(f"Error fetching file from GitHub: {response.json()}")
-        return None
-
-def fetch_file_sha():
-    """
-    Fetch the SHA of the file on GitHub (required for updates).
-    """
-    url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{FILE_PATH}"
-    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
-    response = requests.get(url, headers=headers)
-
-    if response.status_code == 200:
-        file_info = response.json()
-        return file_info["sha"], base64.b64decode(file_info["content"]).decode("utf-8")
-    else:
-        print(f"Error fetching file metadata: {response.json()}")
-        return None, None
-
-def update_github_file(new_content):
-    """
-    Update the file on GitHub with the new content.
-    """
-    sha, current_content = fetch_file_sha()
-    if not sha:
-        print("Unable to fetch file metadata.")
-        return
-
-    updated_content = current_content + new_content
-    encoded_content = base64.b64encode(updated_content.encode("utf-8")).decode("utf-8")
-
-    url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{FILE_PATH}"
-    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
-    data = {
-        "message": "Update conversations",
-        "content": encoded_content,
-        "branch": BRANCH,
-        "sha": sha
-    }
-
-    response = requests.put(url, headers=headers, json=data)
-    if response.status_code == 200:
-        print("GitHub file updated successfully!")
-    else:
-        print(f"Error updating GitHub file: {response.json()}")
+        # Upload updated content
+        response = requests.put(session_file_url, data=updated_content)
+        if response.status_code == 200:
+            logging.info(f"S3 file updated successfully for session {session_id}!")
+        else:
+            logging.error(f"Error updating session file in S3: {response.status_code}")
+    except Exception as e:
+        logging.error(f"Error updating session file in S3: {str(e)}")
 
 # Initialize ChatGroq
 groq_api_key = os.getenv("GROQ_API_KEY")
@@ -128,27 +153,29 @@ with open("./faq_data.json", "r") as f:
 
 
 def get_last_ten_conversations(session_id):
-    """
-    Reads the last ten interactions from the conversations.txt file on GitHub for the specified session_id.
-    """
-    file_content = fetch_github_file()
+    """Reads the last ten interactions for the specified session ID."""
+    file_content = fetch_s3_file(session_id)
+    logging.debug(f"S3 file content:\n{file_content}")
+
     if not file_content:
         return []
 
-    # Split interactions based on separators
-    interactions = file_content.split("=" * 50)
-    
-    # Filter interactions by session_id
+    # Split interactions using the consistent separator
+    interactions = file_content.strip().split("=" * 50)
+    logging.debug(f"Split interactions:\n{interactions}")
+
+    # Filter relevant interactions for the specific session ID
     relevant_interactions = [
         interaction.strip()
         for interaction in interactions
         if f"Session ID: {session_id}" in interaction
     ]
+    logging.debug(f"Filtered interactions for session {session_id}:\n{relevant_interactions}")
 
-    # Get the last ten non-empty interactions
+    # Take the last 10 relevant interactions
     last_ten = relevant_interactions[-10:]
 
-    # Parse the last ten interactions into a structured format
+    # Parse user and AI responses into a structured chat history
     chat_history = []
     for interaction in last_ten:
         user_line = next((line for line in interaction.splitlines() if line.startswith("User:")), None)
@@ -159,88 +186,77 @@ def get_last_ten_conversations(session_id):
                 "ai": ai_line.replace("AI: ", "").strip()
             })
 
+    logging.debug(f"Parsed chat history for session {session_id}:\n{chat_history}")
     return chat_history
 
 def log_conversation(session_id, user_query, ai_response):
-    """
-    Logs the conversation to a local text file, including session_id.
-    """
-    with open(CONVERSATION_LOG_FILE, "a", encoding="utf-8") as f:
-        f.write(f"Session ID: {session_id}\n")
-        f.write("User: " + user_query + "\n")
-        f.write("AI: " + ai_response + "\n")
-        f.write("=" * 50 + "\n")  # Separator for readability
+    """Logs the conversation to the public S3 file."""
+    new_entry = f"Session ID: {session_id}\nUser: {user_query}\nAI: {ai_response}\n{'=' * 50}\n"
+    update_s3_file(session_id, new_entry)
+
 
 @app.get("/")
 async def get_root():
     return {"message": "Welcome to Onasi Helper Bot!"}
+
 @app.post("/chat")
 async def chat_endpoint(request: Request):
-    # Parse request body
     data = await request.json()
     question = data.get("question")
-    session_id = data.get("session_id")  # Client-provided session ID
+    session_id = data.get("session_id")
     domain = data.get("domain", None)
 
-    # Ensure the required parameters are provided
     if not question:
-        return {"error": "Question is required."}
+        raise HTTPException(status_code=400, detail="Question is required.")
 
-    # Check if the session ID is provided; if not, create a new session
     if not session_id:
-        session_id = str(uuid4())  # Generate a new session ID
+        session_id = str(uuid4())
+        logging.info(f"Generated new session_id: {session_id}")
 
-    # Retrieve the last five conversations for the session ID
-    chat_history = get_last_ten_conversations(session_id)
-
-    # First, check if there's a direct match in FAQ data
-    for qa_pair in faq_data:
-        if question.lower() in qa_pair["question"].lower():
-            raw_answer = qa_pair["answer"]
-
-            # Log and append the conversation to the session's chat history
-            log_conversation(session_id, question, raw_answer)
-            chat_history.append({"user": question, "ai": raw_answer})
-
-            # Update GitHub with the new conversation
-            update_github_file(f"\nSession ID: {session_id}\nUser: {question}\nAI: {raw_answer}\n{'=' * 50}\n")
-
-            # Format response for HTML and return
-            formatted_response = chat.invoke(
-                HTML_PROMPT_TEMPLATE.format(answer=raw_answer)
-            )
-            return {"session_id": session_id, "response": HTMLResponse(content=formatted_response.content)}
-
-    # If no FAQ match, proceed with normal processing
+    # Determine domain if not provided
     if not domain:
-        if "RCM" in question:
+        if "rcm" in question.lower():
             domain = "RCM"
-        elif "DHIS" in question:
+        elif "dhis" in question.lower():
             domain = "DHIS"
         else:
             domain = None
 
-    if domain and domain not in SUPPORTED_DOMAINS:
+    if domain and domain.upper() not in SUPPORTED_DOMAINS:
         return {"error": f"Unsupported domain '{domain}'."}
 
-    # Format the session-specific chat history for LLM processing
-    formatted_history = format_chat_history(chat_history)
+    # Fetch chat history
+    chat_history_content = fetch_s3_file(session_id)
+    formatted_history = format_chat_history(chat_history_content)
+    print(formatted_history)
+    # Check FAQ first
+    for qa_pair in faq_data:
+        if question.lower() in qa_pair["question"].lower():
+            raw_answer = qa_pair["answer"]
+            log_conversation(session_id, question, raw_answer)
 
+            # Format response for HTML
+            formatted_response = chat.invoke(
+                HTML_PROMPT_TEMPLATE.format(answer=raw_answer)
+            )
+            return {
+                "session_id": session_id,  # Always return session_id
+                "response": HTMLResponse(content=formatted_response.content)
+            }
+
+    # Proceed with LLM processing
     async def response_generator():
-        # Generate response using the run_llm pipeline
         generated_response = run_llm(query=question, chat_history=formatted_history, domain=domain)
         answer = generated_response.get("answer", "")
 
-        # Log the conversation and append it to the session's history
         log_conversation(session_id, question, answer)
-        chat_history.append({"user": question, "ai": answer})
-
-        # Update GitHub with the new conversation
-        update_github_file(f"\nSession ID: {session_id}\nUser: {question}\nAI: {answer}\n{'=' * 50}\n")
+        update_s3_file(session_id, answer)
 
         # Yield chunks of the response for streaming
         for chunk in answer:
             yield chunk
 
-    print(f"Session ID: {session_id}, Received query: {question}, Domain: {domain}")
+    logging.info(f"Session ID: {session_id}, Received query: {question}, Domain: {domain}")
     return StreamingResponse(response_generator(), media_type="text/plain")
+
+

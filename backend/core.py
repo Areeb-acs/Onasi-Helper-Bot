@@ -342,7 +342,7 @@ def run_llm(query: str, chat_history, domain=None):
             }
         )
 
-
+    
     # Rest of your existing code for domain-specific search
     retrieval_qa_chat_prompt = ChatPromptTemplate.from_template(
         """
@@ -378,6 +378,7 @@ def run_llm(query: str, chat_history, domain=None):
     BASIC RULE: ALWAYS OUTPUT IN HTML, ALWAYS, REGARDLESS OF CONVERSATIONAL HISTORY AND CONTEXT. FOR BOLD WORDS starting with **, use the <b> tag instead. PLEASE AVOID MARKDOWN.
     BASIC RULE: ONLY ANSWER BASED ON PROVIDED CONTEXT.
     BASIC RULE: ALWAYS ALWAYS TAKE THE OUTPUT AND FORMAT IT NICELY IN HTML TAGS, replace the '-' with bullet points, MAKE SURE ALL SPACES ARE DISTRIBUTED AND FORMATTED NICELY.
+    If the user asks about their name, infer it from the conversation history. If their name was not mentioned, respond politely that you don't know their name.
 
         <b>Context from documents:</b>
         {context}
