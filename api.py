@@ -22,6 +22,8 @@ app = FastAPI()
 CONVERSATION_LOG_FILE = "conversations.txt"
 SUPPORTED_DOMAINS = {"RCM", "DHIS"}
 
+# Store chat history for each session
+chat_histories = {}
 
 
 def fetch_file_sha():
