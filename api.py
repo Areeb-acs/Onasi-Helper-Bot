@@ -153,10 +153,6 @@ async def chat_endpoint(request: Request):
             # Log the conversation
             log_conversation(question, raw_answer)
 
-            # Update S3 with FAQ response
-            faq_entry = f"User: {question}\nAI: {raw_answer}\n{'=' * 50}\n"
-            update_s3_file(faq_entry)
-
             # Format response for HTML
             formatted_response = chat.invoke(
                 HTML_PROMPT_TEMPLATE.format(answer=raw_answer)
@@ -173,11 +169,6 @@ async def chat_endpoint(request: Request):
 
         # Log the conversation
         log_conversation(question, answer)
-
-        # Update S3 with LLM response
-        llm_entry = f"User: {question}\nAI: {answer}\n{'=' * 50}\n"
-        update_s3_file(llm_entry)
-
         # Yield chunks of the response for streaming
         for chunk in answer:
             yield chunk
