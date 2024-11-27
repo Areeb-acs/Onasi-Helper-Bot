@@ -326,7 +326,7 @@ def run_llm(query: str, chat_history, domain=None):
         Only answer based on given context and if context not relevant, please say I do not know. Give short answers but when detaile are needed, please give an elaborate answer in bullet points.
         Always use the context for information only, but do reword and rephrase for user to understand complex explanations.
         Do not make up answers. Provide direct responses without any explanatory notes or parenthetical comments.
-
+        
         
         For codevalue and business validation rules, always refer to Additional Context, if no information there, say I don't know.
         For lengthy responses, please provide response in bullet points.
@@ -350,7 +350,7 @@ def run_llm(query: str, chat_history, domain=None):
         4. Always refer to the conversation history for context and maintain continuity in your responses but please be direct.
         5. Always always breakdown long answers into bullet points nicely formatted in HTML.
 
-    BASIC RULE: ALWAYS OUTPUT IN HTML, ALWAYS, REGARDLESS OF CONVERSATIONAL HISTORY AND CONTEXT
+    BASIC RULE: ALWAYS OUTPUT IN HTML, ALWAYS, REGARDLESS OF CONVERSATIONAL HISTORY AND CONTEXT. FOR BOLD WORDS starting with **, use the <b> tag instead. PLEASE AVOID MARKDOWN.
     BASIC RULE: ONLY ANSWER BASED ON PROVIDED CONTEXT.
 
         Context from documents:
