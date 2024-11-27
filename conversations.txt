@@ -370,3 +370,7 @@ AI: I don't have information on this.
 User: eligibility verification
 AI: It is the process of confirming a patient's insurance coverage for the intended medical services.
 ==================================================
+
+User: in detail
+AI: <p>I don't have information on this.</p>
+==================================================
