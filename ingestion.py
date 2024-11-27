@@ -204,7 +204,7 @@ def ingest_docs():
     all_documents = pdf_documents + json_documents + faq_documents
 
     # Split PDF documents into chunks using RecursiveCharacterTextSplitter
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=100)  # Reduce chunk size
 
     split_documents = []
     for doc in all_documents:

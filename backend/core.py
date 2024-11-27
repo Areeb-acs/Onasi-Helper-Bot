@@ -315,7 +315,7 @@ def run_llm(query: str, chat_history, domain=None):
         domain_retriever = docsearch.as_retriever(
             search_kwargs={
                 "filter": {"domain": domain},
-                "k": 3
+                "k": 20
             }
         )
 
@@ -324,7 +324,7 @@ def run_llm(query: str, chat_history, domain=None):
         """
         You are a very friendly conversational chatbot that remembers context across a conversation. Use the provided conversation history to understand the user's question and provide clear, concise, and accurate responses for users.
         Only answer based on given context and if context not relevant, please say I do not know. Give short answers but when detaile are needed, please give an elaborate answer in bullet points.
-        Always use the context for information only, do not use any other context.
+        Always use the context for information only, but do reword and rephrase for user to understand complex explanations.
         Do not make up answers. Provide direct responses without any explanatory notes or parenthetical comments.
         
         For codevalue and business validation rules, always refer to Additional Context, if no information there, say I don't know.
