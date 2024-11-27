@@ -114,7 +114,7 @@ def get_last_ten_conversations(session_id):
     """
     Reads the last ten interactions from the conversations.txt file on GitHub for the specified session_id.
     """
-    file_content = fetch_github_file()
+    file_content = fetch_file_sha()
     if not file_content:
         return []
 
