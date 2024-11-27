@@ -1,15 +1,14 @@
-User: what is muy name
-AI: I don't know.
+Session ID: 293fc88e-fc0a-4aca-ab11-da1f38288bb9
+User: what is my name
+AI: <b>I don't know</b>
 ==================================================
+Session ID: c1f06eaf-6cfc-4253-8898-2cdb6f8a5492
 User: my name is areeb
-AI: <p>Hello Areeb!</p>
+AI: <b>Hello Areeb!</b>
+
+It's nice to meet you! I'm here to assist you with any questions or concerns you may have. Since we just started our conversation, I don't have any specific information to provide yet. What can I help you with today?
 ==================================================
-User: what is my name
-AI: <p>I don't know.</p>
-==================================================
-User: what is my name
+Session ID: 71c9f383-78e9-43a7-9629-ccc14bc995c0
+User: what is my name?
 AI: I don't know.
-==================================================
-User: what is my name
-AI: <p>Hello Areeb!</p>
 ==================================================

@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 import requests
 import base64
 
+from uuid import uuid4  # For generating unique session IDs
 
 def format_chat_history(chat_history):
     """
@@ -47,7 +48,8 @@ app = FastAPI()
 CONVERSATION_LOG_FILE = "conversations.txt"
 SUPPORTED_DOMAINS = {"RCM", "DHIS"}
 
-
+# A global dictionary to store session-specific chat histories in memory
+session_chat_histories = {}
 
 def fetch_file_sha():
     """
@@ -108,9 +110,9 @@ with open("./faq_data.json", "r") as f:
 
 
 
-def get_last_five_conversations():
+def get_last_ten_conversations(session_id):
     """
-    Reads the last five interactions from the conversations.txt file.
+    Reads the last five interactions from the conversations.txt file for the specified session_id.
     """
     if not os.path.exists(CONVERSATION_LOG_FILE):
         return []
@@ -120,12 +122,20 @@ def get_last_five_conversations():
 
     # Split interactions based on separators
     interactions = "".join(lines).split("=" * 50)
+    
+    # Filter interactions by session_id
+    relevant_interactions = [
+        interaction.strip()
+        for interaction in interactions
+        if f"Session ID: {session_id}" in interaction
+    ]
+
     # Get the last five non-empty interactions
-    last_five = [interaction.strip() for interaction in interactions if interaction.strip()][-5:]
+    last_ten = relevant_interactions[-10:]
 
     # Parse the last five interactions into a structured format
     chat_history = []
-    for interaction in last_five:
+    for interaction in last_ten:
         user_line = next((line for line in interaction.splitlines() if line.startswith("User:")), None)
         ai_line = next((line for line in interaction.splitlines() if line.startswith("AI:")), None)
         if user_line and ai_line:
@@ -136,14 +146,15 @@ def get_last_five_conversations():
 
     return chat_history
 
-def log_conversation(user_query, ai_response):
+def log_conversation(session_id, user_query, ai_response):
     """
-    Logs the conversation to a local text file.
+    Logs the conversation to a local text file, including session_id.
     """
     with open(CONVERSATION_LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(f"Session ID: {session_id}\n")
         f.write("User: " + user_query + "\n")
         f.write("AI: " + ai_response + "\n")
-        f.write("="*50 + "\n")  # Separator for readability
+        f.write("=" * 50 + "\n")  # Separator for readability
 
 @app.get("/")
 async def get_root():
@@ -153,32 +164,37 @@ async def chat_endpoint(request: Request):
     # Parse request body
     data = await request.json()
     question = data.get("question")
+    session_id = data.get("session_id")  # Client-provided session ID
     domain = data.get("domain", None)
 
     # Ensure the required parameters are provided
     if not question:
         return {"error": "Question is required."}
 
-    # Retrieve the last five conversations from the log file
-    chat_history = get_last_five_conversations()
+    # Check if the session ID is provided; if not, create a new session
+    if not session_id:
+        session_id = str(uuid4())  # Generate a new session ID
+
+    # Retrieve the last five conversations for the session ID
+    chat_history = get_last_ten_conversations(session_id)
 
     # First, check if there's a direct match in FAQ data
     for qa_pair in faq_data:
         if question.lower() in qa_pair["question"].lower():
             raw_answer = qa_pair["answer"]
 
-            # Log and append the conversation to chat history
-            log_conversation(question, raw_answer)
+            # Log and append the conversation to the session's chat history
+            log_conversation(session_id, question, raw_answer)
             chat_history.append({"user": question, "ai": raw_answer})
 
             # Update GitHub with the new conversation
-            update_github_file(f"\nUser: {question}\nAI: {raw_answer}\n{'=' * 50}\n")
+            update_github_file(f"\nSession ID: {session_id}\nUser: {question}\nAI: {raw_answer}\n{'=' * 50}\n")
 
             # Format response for HTML and return
             formatted_response = chat.invoke(
                 HTML_PROMPT_TEMPLATE.format(answer=raw_answer)
             )
-            return HTMLResponse(content=formatted_response.content)
+            return {"session_id": session_id, "response": HTMLResponse(content=formatted_response.content)}
 
     # If no FAQ match, proceed with normal processing
     if not domain:
@@ -192,7 +208,7 @@ async def chat_endpoint(request: Request):
     if domain and domain not in SUPPORTED_DOMAINS:
         return {"error": f"Unsupported domain '{domain}'."}
 
-    # Format the chat history for LLM processing
+    # Format the session-specific chat history for LLM processing
     formatted_history = format_chat_history(chat_history)
 
     async def response_generator():
@@ -200,17 +216,16 @@ async def chat_endpoint(request: Request):
         generated_response = run_llm(query=question, chat_history=formatted_history, domain=domain)
         answer = generated_response.get("answer", "")
 
-        # Log the conversation
-        log_conversation(question, answer)
+        # Log the conversation and append it to the session's history
+        log_conversation(session_id, question, answer)
+        chat_history.append({"user": question, "ai": answer})
 
         # Update GitHub with the new conversation
-        update_github_file(f"\nUser: {question}\nAI: {answer}\n{'=' * 50}\n")
+        update_github_file(f"\nSession ID: {session_id}\nUser: {question}\nAI: {answer}\n{'=' * 50}\n")
 
-        # Append the LLM-generated response to the chat history
-        chat_history.append({"user": question, "ai": answer})
         # Yield chunks of the response for streaming
         for chunk in answer:
             yield chunk
 
-    print(f"Received query: {question}, Domain: {domain}")
+    print(f"Session ID: {session_id}, Received query: {question}, Domain: {domain}")
     return StreamingResponse(response_generator(), media_type="text/plain")
