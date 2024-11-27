@@ -391,24 +391,24 @@ def run_llm(query: str, chat_history, domain=None):
     #     additional_context = "\n".join([doc.page_content for doc in result])
 
     # Dynamically generate an SQL query based on the user's input.
-    sql_query = generate_sql_query(query)
+    # sql_query = generate_sql_query(query)
 
     # Debugging: Print the generated SQL query to verify its structure.
-    print(sql_query)
+    # print(sql_query)
 
     # Validate the SQL query before execution.
     # Only proceed with database interaction if the query is valid and starts with "SELECT".
-    if sql_query and sql_query.strip().lower().startswith("select"):
-        # Fetch results from the database for valid SQL queries.
-        results = fetch_query_results(sql_query)
-    else:
-        # Handle invalid or None queries by providing a default response.
-        results = 'No Additional Context Found'
-        # Log skipped execution for debugging purposes.
-        print("Skipped execution: Invalid SQL query generated or query is None.")
+    # if sql_query and sql_query.strip().lower().startswith("select"):
+    #     # Fetch results from the database for valid SQL queries.
+    #     results = fetch_query_results(sql_query)
+    # else:
+    #     # Handle invalid or None queries by providing a default response.
+    #     results = 'No Additional Context Found'
+    #     # Log skipped execution for debugging purposes.
+    #     print("Skipped execution: Invalid SQL query generated or query is None.")
 
     # Combine the original user query with the additional context (e.g., database results).
-    query_with_context = f"{query}\n\nAdditional Context:\n{results}"
+    # query_with_context = f"{query}\n\nAdditional Context:\n{results}"
 
     # Create a document chain for retrieval-based question-answering.
     # This chain combines the LLM and the defined QA prompt to process queries effectively.
@@ -426,7 +426,7 @@ def run_llm(query: str, chat_history, domain=None):
 
     # Execute the QA chain with the provided query and chat history.
     result = qa.invoke({
-        "input": query_with_context,  # Input query enriched with additional context
+        "input": query,  # Input query enriched with additional context
         "chat_history": chat_history,  # Maintains the conversation context
     })
 
