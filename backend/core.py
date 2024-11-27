@@ -323,7 +323,7 @@ def run_llm(query: str, chat_history, domain=None):
     # Initialize Pinecone with embeddings
     docsearch = Pinecone(index_name=INDEX_NAME, embedding=embeddings)
     chat = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-70b-8192")
-
+    
     # If no domain is specified, search all documents without a filter
     if not domain:
         domain_retriever = docsearch.as_retriever(
@@ -341,6 +341,7 @@ def run_llm(query: str, chat_history, domain=None):
             }
         )
 
+    
      # Format the chat history for inclusion
     formatted_history = format_chat_history(chat_history)
     # Rest of your existing code for domain-specific search

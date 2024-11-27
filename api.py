@@ -137,8 +137,7 @@ async def chat_endpoint(request: Request):
     if not chat_history:
         chat_history = []  # Reset to an empty list for a new session
 
-    # Format the chat history
-    formatted_history = format_chat_history(chat_history)
+
 
     # First, check if there's a direct match in FAQ data
     for qa_pair in faq_data:
@@ -146,6 +145,7 @@ async def chat_endpoint(request: Request):
             raw_answer = qa_pair["answer"]
             # Log conversation
             log_conversation(question, raw_answer)
+            chat_history.append({"user": question, "ai": raw_answer})
 
             # Update GitHub with new conversation
             update_github_file(f"\nUser: {question}\nAI: {raw_answer}\n{'='*50}\n")
@@ -168,12 +168,17 @@ async def chat_endpoint(request: Request):
     if domain and domain not in SUPPORTED_DOMAINS:
         return {"error": f"Unsupported domain '{domain}'."}
 
+
+    # Format the chat history for LLM processing
+    formatted_history = format_chat_history(chat_history)
+
+
     async def response_generator():
         # Generate response using run_llm
-        generated_response = run_llm(query=question, chat_history=chat_history, domain=domain)
+        generated_response = run_llm(query=question, chat_history=formatted_history, domain=domain)
         answer = generated_response.get("answer", "")
 
-        # Log the conversation
+            # Log the conversation
         log_conversation(question, answer)
 
         # Update GitHub with new conversation
