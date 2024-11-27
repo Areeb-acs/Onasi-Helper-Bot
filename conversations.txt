@@ -479,3 +479,7 @@ AI: <p>The eligibility verification process involves the following steps:</p>
 User: tell me about DHIS please
 AI: I don't have information on this.
 ==================================================
+
+User: what is RCM?
+AI: <p>In Revenue Cycle Management (RCM), the patient's financial journey is meticulously managed through a series of structured steps to ensure efficient handling of healthcare services and payments.</p>
+==================================================
