@@ -378,17 +378,17 @@ def run_llm(query: str, chat_history, domain=None):
     BASIC RULE: ALWAYS OUTPUT IN HTML, ALWAYS, REGARDLESS OF CONVERSATIONAL HISTORY AND CONTEXT. FOR BOLD WORDS starting with **, use the <b> tag instead. PLEASE AVOID MARKDOWN.
     BASIC RULE: ONLY ANSWER BASED ON PROVIDED CONTEXT.
     BASIC RULE: ALWAYS ALWAYS TAKE THE OUTPUT AND FORMAT IT NICELY IN HTML TAGS, replace the '-' with bullet points, MAKE SURE ALL SPACES ARE DISTRIBUTED AND FORMATTED NICELY.
-    If the user asks about their name, infer it from the conversation history. If their name was not mentioned, respond politely that you don't know their name.
+If the user asks about their name, infer it from the conversation history. If their name was mentioned in the conversation history, respond with their name. If their name was not mentioned, respond politely that you don't know their name.
 
-        <b>Context from documents:</b>
+        <b>Context:</b>
         {context}
 
-        <b>Conversation History:</b>
-        {chat_history}
 
         <b>Current Query:</b>
         {input}
 
+        <b>Conversation History:</b>
+        {chat_history}
 
         """
     )
@@ -399,8 +399,6 @@ def run_llm(query: str, chat_history, domain=None):
         Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question.
         Please keep the response in a neat format always using bullet points and breaking down things into sections.
 
-        Chat History:
-        {chat_history}
 
         Follow Up Input: {input}
 
