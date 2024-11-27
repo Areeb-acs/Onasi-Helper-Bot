@@ -316,3 +316,324 @@ AI: I don't know.
 User: What are the details found for codevalue 12
 AI: I don't know.
 ==================================================
+
+User: I have registerde my patient, what hsould i do next
+AI: <p>Now that you have registered your patient, you can:</p>
+<ul>
+  <li>Add all the details in the Claim section.</li>
+  <li>Specify the Subtype whether it's for Outpatient or Inpatient.</li>
+  <li>Enter details in the Personal Information section.</li>
+  <li>Enter details in the Insurance Information section.</li>
+  <li>Enter details in the Benefits Information section.</li>
+  <li>Add data in the Details section.</li>
+  <li>Click on the save button to save the information.</li>
+</ul>
+==================================================
+
+User: hello
+AI: <p>Pleasure to meet you!</p>
+==================================================
+
+User: what is RCM?
+AI: <p>In Revenue Cycle Management (RCM), the patient's financial journey is meticulously managed through a series of structured steps to ensure efficient handling of healthcare services and payments.</p>
+==================================================
+
+User: what is RCM?
+AI: <p>Revenue Cycle Management (RCM) is a process that meticulously manages a patient's financial journey through a series of structured steps to ensure efficient handling of healthcare services and payments.</p>
+==================================================
+
+User: tell me about DHIS please
+AI: I don't have information on this.
+==================================================
+
+User: eligibility is what? respond in bullets plz
+AI: <p>Eligibility is:</p>
+<ul>
+  <li>Verify patient's benefits</li>
+  <li>Check coverage validation</li>
+  <li>Discover coverage</li>
+  <li>Determine priority</li>
+  <li>Select location</li>
+  <li>Add date range</li>
+  <li>Check transfer or new born (if applicable)</li>
+</ul>
+==================================================
+
+User: what is RCM?
+AI: <p>Revenue Cycle Management (RCM) is a process that meticulously manages a patient's financial journey through a series of structured steps to ensure efficient handling of healthcare services and payments.</p>
+==================================================
+
+User: tell me about DHIS please
+AI: I don't have information on this.
+==================================================
+
+User: eligibility verification
+AI: It is the process of confirming a patient's insurance coverage for the intended medical services.
+==================================================
+
+User: in detail
+AI: <p>I don't have information on this.</p>
+==================================================
+
+User: what is RCM?
+AI: <p>Revenue Cycle Management (RCM) is a process that meticulously manages a patient's financial journey through a series of structured steps to ensure efficient handling of healthcare services and payments.</p>
+==================================================
+
+User: what is RCM?
+AI: <p>In Revenue Cycle Management (RCM), the patient's financial journey is meticulously managed through a series of structured steps to ensure efficient handling of healthcare services and payments.</p>
+==================================================
+
+User: how the eligibility is submitted
+AI: <p>To submit the eligibility, press the Send Eligibility button after filling in the necessary details.</p>
+==================================================
+
+User: need more details
+AI: <p>I don't know.</p>
+==================================================
+
+User: tell me about DHIS please
+AI: I don't have information on this.
+==================================================
+
+User: Need details about eligibility verification process with bullets
+AI: <p>Here are the details about the eligibility verification process:</p>
+<ul>
+  <li>Click on the eligibility icon</li>
+  <li>Request Eligibility pop up appears</li>
+  <li>User selects his preferences:
+    <ul>
+      <li>Coverage benefits</li>
+      <li>Coverage Validation</li>
+      <li>Coverage Discovery</li>
+      <li>Coverage Discovery+Coverage benefits</li>
+    </ul>
+  </li>
+  <li>Select Priority from drop down list</li>
+  <li>Select Location From drop down list</li>
+  <li>Add Date Range</li>
+  <li>Select checkbox:
+    <ul>
+      <li>Transfer</li>
+      <li>New Born (enabled only when the patient's age is less than 90 days)</li>
+    </ul>
+  </li>
+  <li>Press on Send Eligibility button</li>
+  <li>Close button will close the form</li>
+</ul>
+==================================================
+
+User: Need details about eligibility verification process with bullets
+AI: <p>To verify eligibility, follow these steps:</p>
+<ul>
+<li>Click on the eligibility icon</li>
+<li>Request Eligibility pop-up appears</li>
+<li>Select your preferences:
+    <ul>
+        <li>Coverage benefits</li>
+        <li>Coverage Validation</li>
+        <li>Coverage Discovery</li>
+        <li>Coverage Discovery + Coverage benefits</li>
+    </ul>
+</li>
+<li>Select Priority from the drop-down list</li>
+<li>Select Location from the drop-down list</li>
+<li>Add Date Range</li>
+<li>Select checkbox:
+    <ul>
+        <li>Transfer</li>
+        <li>New Born (enabled only when the patient's age is less than 90 days)</li>
+    </ul>
+</li>
+<li>Press the Send Eligibility button</li>
+<li>Close button will close the form</li>
+</ul>
+==================================================
+
+User: Need details about eligibility verification process with bullets
+AI: <p>The eligibility verification process involves the following steps:</p>
+<ul>
+  <li>Click on the eligibility icon.</li>
+  <li>A Request Eligibility pop-up appears.</li>
+  <li>User selects preferences:
+    <ul>
+      <li>Coverage benefits</li>
+      <li>Coverage Validation</li>
+      <li>Coverage Discovery</li>
+      <li>Coverage Discovery + Coverage benefits</li>
+    </ul>
+  </li>
+  <li>Select Priority from the drop-down list.</li>
+  <li>Select Location From the drop-down list.</li>
+  <li>Add Date Range.</li>
+  <li>Select checkbox:
+    <ul>
+      <li>Transfer</li>
+      <li>New Born (enabled only when the patient's age is less than 90 days)</li>
+    </ul>
+  </li>
+  <li>Press the Send Eligibility button.</li>
+  <li>Close button will close the form.</li>
+</ul>
+==================================================
+
+User: tell me about DHIS please
+AI: I don't have information on this.
+==================================================
+
+User: what is RCM?
+AI: <p>In Revenue Cycle Management (RCM), the patient's financial journey is meticulously managed through a series of structured steps to ensure efficient handling of healthcare services and payments.</p>
+==================================================
+
+User: Need details about eligibility verification process with bullets
+AI: <p>Here are the details about the eligibility verification process:</p>
+<ul>
+  <li>Click on the eligibility icon</li>
+  <li>Insurance Eligibility Verification: Before services are rendered, the patient's insurance eligibility is confirmed by sending a request to the insurer.</li>
+  <li>This step verifies coverage details and identifies any prerequisites for service approval, reducing the risk of claim denials.</li>
+</ul>
+==================================================
+
+User: Need details about eligibility verification process with bullets
+AI: <p>To verify eligibility, follow these steps:</p>
+<ul>
+  <li>Click on the eligibility icon</li>
+  <li>Request Eligibility pop-up appears</li>
+  <li>User selects preferences:
+    <ul>
+      <li>Coverage benefits</li>
+      <li>Coverage Validation</li>
+      <li>Coverage Discovery</li>
+      <li>Coverage Discovery + Coverage benefits</li>
+    </ul>
+  </li>
+  <li>Select Priority from drop-down list</li>
+  <li>Select Location From drop-down list</li>
+  <li>Add Date Range</li>
+  <li>Select checkbox:
+    <ul>
+      <li>Transfer</li>
+      <li>New Born (enabled only when patient's age is less than 90 days)</li>
+    </ul>
+  </li>
+  <li>Press Send Eligibility button</li>
+</ul>
+==================================================
+
+User: Need details about eligibility verification process with bullets
+AI: <p>Here are the details about the eligibility verification process:</p>
+<ul>
+  <li>Click on the eligibility icon</li>
+  <li>Request Eligibility pop up appears</li>
+  <li>User selects his preferences:
+    <ul>
+      <li>Coverage benefits</li>
+      <li>Coverage Validation</li>
+      <li>Coverage Discovery</li>
+      <li>Coverage Discovery+Coverage benefits</li>
+    </ul>
+  </li>
+  <li>Select Priority from drop down list</li>
+  <li>Select Location From drop down list</li>
+  <li>Add Date Range</li>
+  <li>Select checkbox Transfer or New Born (New Born checkbox will be enabled only when the patient's age is less than 90 days)</li>
+  <li>Press on Send Eligibility button</li>
+  <li>Close button will close the form</li>
+</ul>
+==================================================
+
+User: Need details about eligibility verification process with bullets
+AI: <p>To verify eligibility, follow these steps:</p>
+<ul>
+  <li>Click on the eligibility icon</li>
+  <li>Request Eligibility pop up appears</li>
+  <li>Select preferences: Coverage benefits, Coverage Validation, Coverage Discovery or Coverage Discovery+Coverage benefits</li>
+  <li>Select Priority from drop down list</li>
+  <li>Select Location From drop down list</li>
+  <li>Add Date Range</li>
+  <li>Select checkbox Transfer or New Born (New Born checkbox will be enabled only when the patient's age is less than 90 days)</li>
+  <li>Press on Send Eligibility button</li>
+  <li>Close button will close the form</li>
+</ul>
+==================================================
+
+User: Need details about eligibility verification process with bullets
+AI: <p>The eligibility verification process involves the following steps:</p>
+<ul>
+  <li>Click on the eligibility icon</li>
+  <li>Request Eligibility pop-up appears</li>
+  <li>User selects preferences:
+    <ul>
+      <li>Coverage benefits</li>
+      <li>Coverage Validation</li>
+      <li>Coverage Discovery</li>
+      <li>Coverage Discovery + Coverage benefits</li>
+    </ul>
+  </li>
+  <li>Select Priority from drop-down list</li>
+  <li>Select Location From drop-down list</li>
+  <li>Add Date Range</li>
+  <li>Select checkbox:
+    <ul>
+      <li>Transfer</li>
+      <li>New Born (only enabled when patient's age is less than 90 days)</li>
+    </ul>
+  </li>
+  <li>Press on Send Eligibility button</li>
+  <li>Close button will close the form</li>
+</ul>
+==================================================
+
+User: what is RCM?
+AI: <p>Revenue Cycle Management (RCM) is the process of managing a patient's financial journey through a series of structured steps to ensure efficient handling of healthcare services and payments.</p>
+==================================================
+
+User: Need details about eligibility verification process with bullets
+AI: <p>Here are the details about the eligibility verification process:</p>
+<ul>
+  <li>Click on the eligibility icon</li>
+  <li>Insurance Eligibility Verification: Before services are rendered, the patient's insurance eligibility is confirmed by sending a request to the insurer.</li>
+  <li>This step verifies coverage details and identifies any prerequisites for service approval, reducing the risk of claim denials.</li>
+</ul>
+==================================================
+
+User: tell me about DHIS please
+AI: I don't have information on this.
+==================================================
+
+User: tell me about DHIS please
+AI: I don't have information on this.
+==================================================
+
+User: Need details about eligibility verification process with bullets
+AI: <p>To verify eligibility, follow these steps:</p>
+<ul>
+  <li>Click on the eligibility icon</li>
+  <li>Request Eligibility pop-up appears</li>
+  <li>Select preferences: 
+    <ul>
+      <li>Coverage benefits</li>
+      <li>Coverage Validation</li>
+      <li>Coverage Discovery</li>
+      <li>Coverage Discovery + Coverage benefits</li>
+    </ul>
+  </li>
+  <li>Select Priority from drop-down list</li>
+  <li>Select Location From drop-down list</li>
+  <li>Add Date Range</li>
+  <li>Select checkbox: 
+    <ul>
+      <li>Transfer</li>
+      <li>New Born (only enabled if patient's age is less than 90 days)</li>
+    </ul>
+  </li>
+  <li>Press Send Eligibility button</li>
+</ul>
+==================================================
+
+User: what is RCM?
+AI: <p>Revenue Cycle Management (RCM) is a process that meticulously manages a patient's financial journey through a series of structured steps to ensure efficient handling of healthcare services and payments.</p>
+==================================================
+
+User: tell me about DHIS please
+AI: I don't know.
+==================================================
