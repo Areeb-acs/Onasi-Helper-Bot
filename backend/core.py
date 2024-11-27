@@ -323,7 +323,8 @@ def run_llm(query: str, chat_history, domain=None):
     retrieval_qa_chat_prompt = ChatPromptTemplate.from_template(
         """
         You are a very friendly conversational chatbot that remembers context across a conversation. Use the provided conversation history to understand the user's question and provide clear, concise, and accurate responses for users.
-        Only answer based on given context and if context not relevant, please say I do not know. Please give shortest answers possible to questions unless asked otherwise.
+        Only answer based on given context and if context not relevant, please say I do not know. Give short answers but when detaile are needed, please give an elaborate answer in bullet points.
+        Always use the context for information only, do not use any other context.
         Do not make up answers. Provide direct responses without any explanatory notes or parenthetical comments.
         
         For codevalue and business validation rules, always refer to Additional Context, if no information there, say I don't know.
@@ -348,7 +349,7 @@ def run_llm(query: str, chat_history, domain=None):
         4. Always refer to the conversation history for context and maintain continuity in your responses but please be direct.
         5. Always always breakdown long answers into bullet points nicely formatted in HTML.
 
-        BASIC RULE: ALWAYS OUTPUT IN HTML, ALWAYS, REGARDLESS OF CONVERSATIONAL HISTORY AND CONTEXT
+    BASIC RULE: ALWAYS OUTPUT IN HTML, ALWAYS, REGARDLESS OF CONVERSATIONAL HISTORY AND CONTEXT
 
         Context from documents:
         {context}
