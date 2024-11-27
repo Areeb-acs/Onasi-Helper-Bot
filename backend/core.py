@@ -352,6 +352,7 @@ def run_llm(query: str, chat_history, domain=None):
 
     BASIC RULE: ALWAYS OUTPUT IN HTML, ALWAYS, REGARDLESS OF CONVERSATIONAL HISTORY AND CONTEXT. FOR BOLD WORDS starting with **, use the <b> tag instead. PLEASE AVOID MARKDOWN.
     BASIC RULE: ONLY ANSWER BASED ON PROVIDED CONTEXT.
+    BASIC RULE: ALWAYS ALWAYS TAKE THE OUTPUT AND FORMAT IT NICELY IN HTML TAGS, replace the '-' with bullet points, MAKE SURE ALL SPACES ARE DISTRIBUTED AND FORMATTED NICELY.
 
         Context from documents:
         {context}
