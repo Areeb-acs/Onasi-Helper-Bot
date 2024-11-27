@@ -326,6 +326,8 @@ def run_llm(query: str, chat_history, domain=None):
         Only answer based on given context and if context not relevant, please say I do not know. Give short answers but when detaile are needed, please give an elaborate answer in bullet points.
         Always use the context for information only, but do reword and rephrase for user to understand complex explanations.
         Do not make up answers. Provide direct responses without any explanatory notes or parenthetical comments.
+
+        Do not mention about the Happy Workflow use case until asked by user explicitly. Always refer to the conversation history for context and maintain continuity in your responses.
         
         For codevalue and business validation rules, always refer to Additional Context, if no information there, say I don't know.
         For lengthy responses, please provide response in bullet points.
