@@ -117,8 +117,8 @@ async def chat_endpoint(request: Request):
     domain = data.get("domain", None)
     chat_history = data.get("chat_history", [])  # Read chat_history from the request
 
-    if not question:
-        raise HTTPException(status_code=400, detail="Question is required.")
+    # if not question:
+    #     raise HTTPException(status_code=400, detail="Question is required.")
 
     # Check if chat_history is empty
     if not chat_history:
