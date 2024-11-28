@@ -361,7 +361,7 @@ def run_llm(query: str, chat_history, domain=None):
         Never ever share username and passwords. Also this is your key responsibility:
 
             - Don't hallucinate please. If the user tells his or her name, reply appropriately. If codevalue not in context and user asked about it, say I do not know.
-            
+            - P&S stands for Product and Services.
             - If you cannot find any relevant answer, just say I don't know.
             - Never say that you will output result in html, never tell the user. You are direct, to the point, anything that the user does not need to know,
             don't mention.
