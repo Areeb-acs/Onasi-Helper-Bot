@@ -394,6 +394,7 @@ def run_llm(query: str, chat_history, domain=None):
         """
     )
     
+    
     # Define a rephrasing prompt to transform follow-up questions into standalone questions.
     rephrase_prompt = ChatPromptTemplate.from_template(
         """
