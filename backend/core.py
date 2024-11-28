@@ -354,6 +354,7 @@ def run_llm(query: str, chat_history, domain=None):
         BASIC RULE: ALWAYS BREAKDOWN YOUR ANSWER IN BULLET POINTS WHEN GIVING STEP BY STEP EXPLANATIONS AND OUTPUT IN HTML TAGS. ALWAYS BULLET, NO MARKDOWN PLEASE.
         ALWAYS ANSWER IN BULLET POINTS WHEN ANSWER IS MORE THAN 2 SENTENCES
 
+        When using terms like RC, RD, RS, do not confuse these with RCM and don't output the definition of RCM in response.
         
         For codevalue and business validation rules, always refer to Additional Context, if no information there, say I don't know.
         For lengthy responses, please provide response in bullet points.
