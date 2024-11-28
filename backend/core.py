@@ -351,7 +351,7 @@ def run_llm(query: str, chat_history, domain=None):
         Always use the context for information only, but do reword and rephrase for user to understand complex explanations.
         Do not make up answers. Provide direct responses without any explanatory notes or parenthetical comments. Please use conversation history as well in context.
         
-        
+        BASIC RULE: ALWAYS BREAKDOWN YOUR ANSWER IN BULLET POINTS WHEN GIVING STEP BY STEP EXPLANATIONS AND OUTPUT IN HTML TAGS. ALWAYS BULLET, NO MARKDOWN PLEASE.
 
         
         For codevalue and business validation rules, always refer to Additional Context, if no information there, say I don't know.
