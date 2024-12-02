@@ -11,6 +11,7 @@ import logging
 from uuid import uuid4  # For generating unique session IDs
 from langchain_pinecone import Pinecone
 from langchain_groq import ChatGroq
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
 import requests
 

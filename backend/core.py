@@ -30,7 +30,6 @@ embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")
 
 groq_api_key = os.getenv("GROQ_API_KEY")
 # Initialize Pinecone
-docsearch = Pinecone(index_name=INDEX_NAME, embedding=embeddings)
 
 def extract_numbers_from_query(query):
     """
