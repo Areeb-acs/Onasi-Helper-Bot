@@ -121,25 +121,39 @@ async def get_root():
 
 @app.post("/chat")
 async def chat_endpoint(request: Request):
+    """
+    Chat endpoint for processing user queries and returning AI-generated responses.
+
+    Workflow:
+    1. Parse incoming request data.
+    2. Check for an existing session or initialize a new one.
+    3. Match the query against FAQ data for faster responses.
+    4. If not found in FAQ, proceed with LLM response generation.
+    5. Log the conversation to S3 (batched for efficiency).
+    6. Stream the response back to the user.
+    """
     data = await request.json()
     question = data.get("question")
     domain = data.get("domain", None)
-    chat_history = data.get("chat_history", [])  # Read chat_history from the request
+    chat_history = data.get("chat_history", [])
 
-    # if not question:
-    #     raise HTTPException(status_code=400, detail="Question is required.")
+    if not question:
+        return {"error": "Question is required."}
 
-    # Check if chat_history is empty
+    # ------------------------------
+    # 1. Initialize or Fetch Session
+    # ------------------------------
     if not chat_history:
-        session_id = str(uuid4())  # Generate a new session ID
+        session_id = str(uuid4())  # Generate a unique session ID for new sessions
         logging.info(f"Generated new session ID: {session_id}")
-        chat_history = [{"user": f"New session initialized with ID: {session_id}", "ai": "Welcome! How can I assist you?"}]
+        chat_history = [{"user": f"Session ID: {session_id}", "ai": "Welcome! How can I assist you?"}]
 
-        # Log new session in S3
-        new_session_entry = f"New Session Initialized: {session_id}\n{'=' * 50}\n"
-        update_s3_file(new_session_entry)
+        # Log new session initialization
+        update_s3_file(f"New Session Initialized: {session_id}\n{'=' * 50}\n")
 
-    # Determine domain if not provided
+    # ------------------------------
+    # 2. Determine Domain
+    # ------------------------------
     if not domain:
         if "rcm" in question.lower():
             domain = "RCM"
@@ -151,36 +165,51 @@ async def chat_endpoint(request: Request):
     if domain and domain.upper() not in SUPPORTED_DOMAINS:
         return {"error": f"Unsupported domain '{domain}'."}
 
-    # Format chat history into a string
-    formatted_chat_history = format_chat_history(chat_history)
+    # ------------------------------
+    # 3. Optimize FAQ Matching
+    # ------------------------------
+    # Use a dictionary for O(1) lookup instead of iterating through the list
+    faq_lookup = {qa["question"].lower(): qa["answer"] for qa in faq_data}
+    raw_answer = faq_lookup.get(question.lower())
 
-    # Check FAQ first
-    for qa_pair in faq_data:
-        if question.lower() in qa_pair["question"].lower():
-            raw_answer = qa_pair["answer"]
+    if raw_answer:
+        log_conversation(question, raw_answer)
 
-            # Log the conversation
-            log_conversation(question, raw_answer)
+        # Format FAQ response into HTML
+        formatted_response = chat.invoke(HTML_PROMPT_TEMPLATE.format(answer=raw_answer))
+        return {
+            "response": HTMLResponse(content=formatted_response.content)
+        }
 
-            # Format response for HTML
-            formatted_response = chat.invoke(
-                HTML_PROMPT_TEMPLATE.format(answer=raw_answer)
-            )
-            return {
-                "response": HTMLResponse(content=formatted_response.content)
-            }
-
-    # Proceed with LLM processing
+    # ------------------------------
+    # 4. LLM Response Generation
+    # ------------------------------
     async def response_generator():
-        # Pass the formatted chat history to the run_llm function
-        generated_response = run_llm(query=question, chat=chat, docsearch=docsearch, chat_history=formatted_chat_history, domain=domain)
-        answer = generated_response.get("answer", "")
+        """
+        Generate the response using LLM with streaming.
+        """
+        try:
+            # Pass chat history and other params to `run_llm`
+            generated_response = run_llm(
+                query=question,
+                chat=chat,
+                docsearch=docsearch,
+                chat_history=format_chat_history(chat_history),
+                domain=domain
+            )
+            answer = generated_response.get("answer", "")
 
-        # Log the conversation
-        log_conversation(question, answer)
-        # Yield chunks of the response for streaming
-        for chunk in answer:
-            yield chunk
+            # Log the conversation for debugging/auditing
+            log_conversation(question, answer)
 
-    logging.info(f"Received query: {question}, Domain: {domain}, Chat History: {chat_history}")
+            # Stream response chunks
+            for chunk in answer:
+                yield chunk
+
+        except Exception as e:
+            logging.error(f"Error generating response: {str(e)}")
+            yield "An error occurred while generating the response."
+
+    logging.info(f"Processing query: {question}, Domain: {domain}")
     return StreamingResponse(response_generator(), media_type="text/plain")
+
