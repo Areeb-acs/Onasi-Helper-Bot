@@ -31,6 +31,36 @@ embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")
 groq_api_key = os.getenv("GROQ_API_KEY")
 # Initialize Pinecone
 
+def is_conversation_start(chat_history):
+    """
+    Check if this is the start of a conversation
+    """
+    return not chat_history or len(chat_history) == 0
+
+def format_chat_history(chat_history):
+    """
+    Format the chat history into a readable string for inclusion in LLM input.
+    Supports lists of dictionaries or tuples.
+    """
+    if not chat_history:
+        return "No previous history."
+
+    formatted_history = ""
+    for i, entry in enumerate(chat_history):
+        if isinstance(entry, dict):  # If the entry is a dictionary
+            user_input = entry.get("user", "No input")
+            ai_response = entry.get("ai", "No response")
+        elif isinstance(entry, tuple) and len(entry) == 2:  # If the entry is a tuple with two elements
+            user_input, ai_response = entry
+        else:  # Fallback for unexpected structures
+            user_input = "Unknown format"
+            ai_response = "Unknown format"
+
+        formatted_history += f"\nTurn {i+1}:\nUser: {user_input}\nAI: {ai_response}\n"
+    
+    return formatted_history.strip()
+
+
 def run_llm(query: str, chat_history, chat, docsearch, domain=None):
     """
     Main pipeline for processing user queries with priority for FAQ / QA domain.
@@ -54,7 +84,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         domain_retriever = docsearch.as_retriever(
             search_kwargs={
                 "filter": {},  # No filter applied for global search.
-                "k": 10  # Retrieve top 7 results.
+                "k": 7  # Retrieve top 7 results.
             }
         )
     else:
