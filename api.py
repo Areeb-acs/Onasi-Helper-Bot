@@ -9,6 +9,8 @@ import requests
 import base64
 import logging
 from uuid import uuid4  # For generating unique session IDs
+from langchain_pinecone import Pinecone
+from langchain_groq import ChatGroq
 
 import requests
 
@@ -35,7 +37,12 @@ session_chat_histories = {}
 
 BUCKET_NAME = "onasi-chatbot"
 FILE_URL = "https://onasi-chatbot.s3.us-east-1.amazonaws.com/conversations.txt"
+INDEX_NAME = "rcm-final-app"
+embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")
 
+groq_api_key = os.getenv("GROQ_API_KEY")
+# Initialize Pinecone
+docsearch = Pinecone(index_name=INDEX_NAME, embedding=embeddings)
 
 
 def update_s3_file(new_content):
@@ -62,7 +69,8 @@ def update_s3_file(new_content):
 # Initialize ChatGroq
 groq_api_key = os.getenv("GROQ_API_KEY")
 chat = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-70b-8192")
-
+# Preinitialize docsearch (can be reused across multiple queries)
+docsearch = Pinecone(index_name=INDEX_NAME, embedding=embeddings)
 
 # HTML formatting prompt template
 HTML_PROMPT_TEMPLATE = """
@@ -164,7 +172,7 @@ async def chat_endpoint(request: Request):
     # Proceed with LLM processing
     async def response_generator():
         # Pass the formatted chat history to the run_llm function
-        generated_response = run_llm(query=question, chat_history=formatted_chat_history, domain=domain)
+        generated_response = run_llm(query=question, chat=chat, docsearch=docsearch, chat_history=formatted_chat_history, domain=domain)
         answer = generated_response.get("answer", "")
 
         # Log the conversation

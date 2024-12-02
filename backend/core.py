@@ -316,20 +316,18 @@ def format_chat_history(chat_history):
     return formatted_history.strip()
 
 
-def run_llm(query: str, chat_history, domain=None):
+def run_llm(query: str, chat_history, chat, docsearch, domain=None):
     """
     Main pipeline for processing user queries with priority for FAQ / QA domain
     """
-    # Initialize Pinecone with embeddings
-    docsearch = Pinecone(index_name=INDEX_NAME, embedding=embeddings)
-    chat = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-70b-8192")
+
     
     # If no domain is specified, search all documents without a filter
     if not domain:
         domain_retriever = docsearch.as_retriever(
             search_kwargs={
                 "filter": {},  # No domain filter
-                "k": 10
+                "k": 7
             }
         )
 
@@ -351,6 +349,8 @@ def run_llm(query: str, chat_history, domain=None):
         Only answer based on given context and if context not relevant, please say I do not know. Give short answers but when detaile are needed, please give an elaborate answer in bullet points.
         Always use the context for information only, but do reword and rephrase for user to understand complex explanations. 
         Do not make up answers. Provide direct responses without any explanatory notes or parenthetical comments. 
+        
+        When you cannot find an answer, please say this is out of scope for me or out of my knowledge base.
         
         BASIC RULE: ALWAYS BREAKDOWN YOUR ANSWER IN BULLET POINTS WHEN GIVING STEP BY STEP EXPLANATIONS AND OUTPUT IN HTML TAGS. ALWAYS BULLET, NO MARKDOWN PLEASE.
         ALWAYS ANSWER IN BULLET POINTS using HTML tags
@@ -378,7 +378,11 @@ def run_llm(query: str, chat_history, domain=None):
         2. If no relevant response, say I don't know.
         3. Always output the response in html not in plain text
         4. Always refer to the conversation history for context and maintain continuity in your responses but please be direct.
-        5. Always always breakdown long answers into bullet points nicely formatted in HTML.
+        5. Always always breakdown medium to long answers into bullet points nicely formatted in HTML.
+                ALWAYS ANSWER IN BULLET POINTS using HTML tags but dont start with <html> tag, just other tags.
+
+
+
 
     BASIC RULE: ALWAYS OUTPUT IN HTML, ALWAYS, REGARDLESS OF CONVERSATIONAL HISTORY AND CONTEXT. FOR BOLD WORDS starting with **, use the <b> tag instead. PLEASE AVOID MARKDOWN.
     BASIC RULE: ONLY ANSWER BASED ON PROVIDED CONTEXT.
