@@ -116,6 +116,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         - Please do not use Markdown, only HTML tags for bullet point formatting only <ul> and <li> elements
         - Please do not start with Response <b>Response:</b>, directly answer the question.
         - If answer is very short, no need for bullet points.
+        - Please do not repeat what the user asked like if query is Hello, no need to say you said Hello..
         <b>Current Query:</b> {input}
         <b>Context:</b> {context}
 
