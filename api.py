@@ -229,9 +229,23 @@ async def chat_endpoint(request: Request):
                 chat_history=format_chat_history(chat_history),
                 domain=domain
             )
-            
-            
-            answer = generated_response.get("answer", "")
+
+            # Handle different types of `generated_response`
+            if isinstance(generated_response, str):
+                # If the response is a string, treat it as the full answer
+                answer = generated_response
+
+            elif isinstance(generated_response, dict):
+                # If the response is a dictionary, extract the "answer" key
+                answer = generated_response.get("answer", "")
+
+            elif hasattr(generated_response, "content"):
+                # If the response is an object with a "content" attribute
+                answer = generated_response.content
+
+            else:
+                # Unexpected response type
+                raise TypeError(f"Unexpected response type: {type(generated_response)}")
 
             # Log the conversation for debugging/auditing
             log_conversation(question, answer)
