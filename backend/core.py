@@ -79,7 +79,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
 
 
     # Detect Summarization or Reword Requests
-    is_summary_request = any(keyword in query.lower() for keyword in ["summarize", "summarise", "reword"])
+    is_summary_request = any(keyword in query.lower() for keyword in ["re"])
 
     if is_summary_request:
             # Create the system message
@@ -90,6 +90,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
             You are a helpful assistant. The user has asked for a summarization or rewording of the latest context.
             Use ONLY the provided chat history to create your response. Do not include additional information.
 
+            ALWAYS OUTPUT in <html> elements but never use the <html> tag itself.
             <b>Instructions:</b>
             - Summarize or reword the provided context as requested.
             - Use clear and concise language.
@@ -97,6 +98,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
             - Create sub-bullet points as well using nested <ul> tags for better readability.
             - There is a line break after each bullet point for better readability.
             - Avoid markdown; always format output in clean HTML (no <html> tag).
+            
             - If the context is irrelevant or insufficient, reply with "I don't know."
             - Never hallucinate information; use the provided chat history only.
             - Respond with detailed explanations when required but always concise.
@@ -150,7 +152,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         domain_retriever = docsearch.as_retriever(
             search_kwargs={
                 "filter": {"domain": domain},  # Apply domain-specific filter.
-                "k": 5  # Retrieve top 10 results.
+                "k": 7  # Retrieve top 10 results.
             }
         )
 
@@ -191,6 +193,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         
         <b>Current Query:</b> {input}
         <b>Context:</b> {context}
+        <b>Conversation History:</b> {chat_history}
 
         """
     )
