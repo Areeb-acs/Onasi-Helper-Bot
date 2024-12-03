@@ -106,11 +106,14 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         Use the provided conversation history to understand the user's query and answer based on the context.
 
         <b>Instructions:</b>
-        - Break down your response into bullet points using HTML tags.
+        - Break down your response into bullet points using HTML tags and always format them nicely
+        - There is a link break after each bullet point for better readability
         - Avoid markdown; always format output in clean HTML (no <html> tag).
         - If the context is irrelevant or insufficient, reply with "I don't know."
         - Never hallucinate information; use the provided context only.
         - Respond with detailed explanations when required but always concise.
+        - Respond with bullet points when answer is longer than 2 sentences.
+        - Always use bullet points for lists and details and please do not use <html> elements
 
         <b>Context:</b> {context}
         <b>Current Query:</b> {input}
