@@ -63,76 +63,105 @@ def format_chat_history(chat_history):
 
 def run_llm(query: str, chat_history, chat, docsearch, domain=None):
     """
-    Main pipeline for processing user queries with priority for FAQ / QA domain.
-
+    Main pipeline for processing user queries with a focus on specific instructions 
+    like summarization and rewording.
+    
     Parameters:
         query (str): User query input.
         chat_history (list): List of previous conversation turns (user and AI responses).
-        chat: Pre-initialized chat model (e.g., ChatGroq or ChatOpenAI).
+        chat: Pre-initialized chat model.
         docsearch: Pre-initialized Pinecone object for document retrieval.
         domain (str): Optional domain filter for focused document retrieval.
 
     Returns:
         str: AI-generated response based on the query and context.
     """
+    # ------------------------------
+    # 1. Detect Summarize or Reword Requests
+    # ------------------------------
+    is_summary_request = "summarize" in query.lower() or "reword" in query.lower()
+    latest_context = ""
+    
+    if is_summary_request and chat_history:
+        # Use only the latest Q&A pair from the chat history
+        latest_entry = chat_history[-2]
+        latest_context = f"User: {latest_entry['user']}\nAI: {latest_entry['ai']}\n"
 
     # ------------------------------
-    # 1. Setup Document Retriever
+    # 2. Setup Document Retriever
     # ------------------------------
-    # Use a default retriever if no domain is specified.
+    # Use default retriever if no domain is specified
     if not domain:
         domain_retriever = docsearch.as_retriever(
-            search_kwargs={
-                "filter": {},  # No filter applied for global search.
-                "k": 5  # Retrieve top 7 results.
-            }
+            search_kwargs={"filter": {}, "k": 5}  # Top 5 results
         )
     else:
-        # Use domain-specific filtering for more focused results.
+        # Domain-specific filtering
         domain_retriever = docsearch.as_retriever(
-            search_kwargs={
-                "filter": {"domain": domain},  # Apply domain-specific filter.
-                "k": 5  # Retrieve top 10 results.
-            }
+            search_kwargs={"filter": {"domain": domain}, "k": 5}
         )
 
     # ------------------------------
-    # 2. Define Chat Prompts
+    # 3. Define Chat Prompts
     # ------------------------------
-    # Prompt for contextual retrieval-based QA.
-    retrieval_qa_chat_prompt = ChatPromptTemplate.from_template(
-        """
-        You are a friendly chatbot that provides concise and accurate responses.
-        Use the provided conversation history to understand the user's query and answer based on the context.
-        Your name is Onasi AI, a friendly conversational chatbot. Only answer based on the provided context.
-        If answer is not in given context, please respond I don't know only.
-        Do not mention step numbers, the numbering is only for the order. 
-        If user just enters vague statements like Good, just answer please ask a valid question.
-        No need to start response with bullet point but then you eventually need to provide bullet points.
-        
-        Please do not use context in case of these statements, just reply as quickly as possible saying I don''t know.        
-        <b>Instructions:</b>
-        - Break down your response into bullet points using HTML tags and always format them nicely
-        - Create sub-bullet points as well using nested <ul> tags for bette readability
-        - There is a link break after each bullet point for better readability
-        - Avoid markdown; always format output in clean HTML (no <html> tag).
-        - If the context is irrelevant or insufficient, reply with "I don't know."        
-        - If answer is not in given context, pleasr respond I don't know.
-        - Never hallucinate information; use the provided context only.
-        - Respond with detailed explanations when required but always concise.
-        - Respond with bullet points when answer is longer than 2 sentences.
-        - Please do not use Markdown, only HTML tags for bullet point formatting only <ul> and <li> elements
-        - Please do not start with Response <b>Response:</b>, directly answer the question.
-        - If answer is very short, no need for bullet points.
-        - Please do not repeat what the user asked like if query is Hello, no need to say you said Hello
-        
-        
-        <b>Current Query:</b> {input}
-        <b>Context:</b> {context}
+    if is_summary_request:
+        # Prompt specifically for summarization or rewording
+        retrieval_qa_chat_prompt = ChatPromptTemplate.from_template(
+            """
+            You are a helpful assistant. The user has asked for a summarization or rewording of the latest context.
+            Use ONLY the provided context to create your response. Do not include additional information.
 
-        <b>Conversation History:</b> {chat_history}
-        """
-    )
+            <b>Instructions:</b>
+            - Summarize or reword the provided context as requested.
+            - Use clear and concise language.
+            - Respond with bullet points if necessary but do not include additional explanations.
+
+            <b>Latest Context:</b>
+            {chat_history}
+
+            <b>Current Query:</b>
+            {input}
+            """
+        )
+    else:
+        retrieval_qa_chat_prompt = ChatPromptTemplate.from_template(
+            """
+            You are a friendly chatbot that provides concise and accurate responses.
+            Use the provided conversation history to understand the user's query and answer based on the context.
+            Your name is Onasi AI, a friendly conversational chatbot. Only answer based on the provided context.
+            If answer is not in given context, please respond I don't know only.
+            Do not mention step numbers, the numbering is only for the order. 
+            If user just enters vague statements like Good, just answer please ask a valid question.
+            No need to start response with bullet point but then you eventually need to provide bullet points.
+            
+            
+
+            <b>Instructions:</b>
+            - WHEN User mentions summarize, user mentions reword the above, for this please use only chat history and the latest information
+            - 
+            
+            Please do not use context in case of these statements, just reply as quickly as possible saying I don''t know.        
+            <b>Instructions:</b>
+            - Break down your response into bullet points using HTML tags and always format them nicely
+            - Create sub-bullet points as well using nested <ul> tags for bette readability
+            - There is a link break after each bullet point for better readability
+            - Avoid markdown; always format output in clean HTML (no <html> tag).
+            - If the context is irrelevant or insufficient, reply with "I don't know."        
+            - If answer is not in given context, please respond I don't know.
+            - Never hallucinate information; use the provided context only.
+            - Respond with detailed explanations when required but always concise.
+            - Respond with bullet points when answer is longer than 2 sentences.
+            - Please do not use Markdown, only HTML tags for bullet point formatting only <ul> and <li> elements
+            - Please do not start with Response <b>Response:</b>, directly answer the question.
+            - If answer is very short, no need for bullet points.
+            
+            
+            <b>Current Query:</b> {input}
+            <b>Context:</b> {context}
+
+            <b>Conversation History:</b> {chat_history}
+            """
+        )
 
     # Prompt for rephrasing follow-up questions into standalone queries.
     rephrase_prompt = ChatPromptTemplate.from_template(
