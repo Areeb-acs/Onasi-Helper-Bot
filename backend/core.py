@@ -154,7 +154,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         domain_retriever = docsearch.as_retriever(
             search_kwargs={
                 "filter": {"domain": domain},  # Apply domain-specific filter.
-                "k": 4  # Retrieve top 10 results.
+                "k": 5  # Retrieve top 10 results.
             }
         )
 
@@ -164,7 +164,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
     # Prompt for contextual retrieval-based QA.
     retrieval_qa_chat_prompt = ChatPromptTemplate.from_template(
         """
-        You are a friendly chatbot that provides concise and accurate responses.
+        You are a friendly chatbot that provides concise and accurate responses.When the user says hello, say Hello! 
         Use the provided conversation history to understand the user's query and answer based on the context.
         Your name is Onasi AI, a friendly conversational chatbot. Only answer based on the provided context.
         If answer is not in given context, please respond I don't know only.

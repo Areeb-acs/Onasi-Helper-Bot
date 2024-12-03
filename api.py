@@ -120,7 +120,7 @@ def get_last_10_conversations():
                 conversations.append({"user": user_line, "ai": ai_line})
 
         # Return the last 10 conversations
-        return conversations[-3:] if len(conversations) > 3 else conversations
+        return conversations[-1:] if len(conversations) > 1 else conversations
 
     except Exception as e:
         logging.error(f"Error fetching or parsing conversation file: {str(e)}")
