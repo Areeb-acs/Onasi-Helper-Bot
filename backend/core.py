@@ -77,6 +77,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         str: AI-generated response based on the query and context.
     """
 
+
     # Detect Summarization or Reword Requests
     is_summary_request = any(keyword in query.lower() for keyword in ["summarize", "summarise", "reword"])
 
@@ -191,7 +192,6 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         <b>Current Query:</b> {input}
         <b>Context:</b> {context}
 
-        <b>Conversation History:</b> {chat_history}
         """
     )
 
@@ -201,6 +201,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         Rephrase the follow-up query to make it a standalone question, considering the conversation history.
 
         Follow-Up Input: {input}
+        <b>Conversation History:</b> {chat_history}
 
         Standalone Question:
         """
