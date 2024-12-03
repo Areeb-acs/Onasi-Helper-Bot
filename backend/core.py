@@ -110,6 +110,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
             """
             You are a helpful assistant. The user has asked for a summarization or rewording of the latest context.
             Use ONLY the provided context to create your response. Do not include additional information.
+            
 
             <b>Instructions:</b>
             - Summarize or reword the provided context as requested.
@@ -133,7 +134,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
             Do not mention step numbers, the numbering is only for the order. 
             If user just enters vague statements like Good, just answer please ask a valid question.
             No need to start response with bullet point but then you eventually need to provide bullet points.
-            
+            Do not randomly say, please ask valid question
             
 
             <b>Instructions:</b>
