@@ -120,7 +120,7 @@ def get_last_10_conversations():
                 conversations.append({"user": user_line, "ai": ai_line})
 
         # Return the last 10 conversations
-        return conversations[-4:] if len(conversations) > 4 else conversations
+        return conversations[-5:] if len(conversations) > 4 else conversations
 
     except Exception as e:
         logging.error(f"Error fetching or parsing conversation file: {str(e)}")
@@ -167,7 +167,7 @@ async def chat_endpoint(request: Request):
     data = await request.json()
     question = data.get("question")
     domain = data.get("domain", None)
-    chat_history = data.get("chat_history", [])
+    chat_history = [data.get("chat_history", [])]
 
     if not question:
         return {"error": "Question is required."}
@@ -182,6 +182,8 @@ async def chat_endpoint(request: Request):
 
         # Log new session initialization
         update_s3_file(f"New Session Initialized: {session_id}\n{'=' * 50}\n")
+
+    chat_history = get_last_10_conversations()  # Fetch last 10 Q&A pairs from S3
 
     # ------------------------------
     # 2. Determine Domain
