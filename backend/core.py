@@ -114,9 +114,11 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         - Respond with detailed explanations when required but always concise.
         - Respond with bullet points when answer is longer than 2 sentences.
         - Always use bullet points for lists and details and please do not use <html> elements
+        - ALWAYS RESPOND IN BULLET POINTS
 
-        <b>Context:</b> {context}
         <b>Current Query:</b> {input}
+        <b>Context:</b> {context}
+
         <b>Conversation History:</b> {chat_history}
         """
     )
