@@ -154,7 +154,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         domain_retriever = docsearch.as_retriever(
             search_kwargs={
                 "filter": {"domain": domain},  # Apply domain-specific filter.
-                "k": 7  # Retrieve top 10 results.
+                "k": 10  # Retrieve top 10 results.
             }
         )
 
@@ -174,7 +174,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         
 
         <b>Instructions:</b>
-        - Never mention users name unless he specifically asks for the name.
+        - Never mention users name unless he specifically asks for the name. 
         - WHEN User mentions summarize, user mentions reword the above, for this please use only chat history and the latest information
         - If user asks summarize, then please just look at context and conversational history and neatly summarize, do not go out of context.
         
