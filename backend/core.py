@@ -84,7 +84,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         domain_retriever = docsearch.as_retriever(
             search_kwargs={
                 "filter": {},  # No filter applied for global search.
-                "k": 20  # Retrieve top 7 results.
+                "k": 15  # Retrieve top 7 results.
             }
         )
     else:
@@ -92,7 +92,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         domain_retriever = docsearch.as_retriever(
             search_kwargs={
                 "filter": {"domain": domain},  # Apply domain-specific filter.
-                "k": 20  # Retrieve top 10 results.
+                "k": 15  # Retrieve top 10 results.
             }
         )
 
@@ -104,12 +104,14 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         """
         You are a friendly chatbot that provides concise and accurate responses.
         Use the provided conversation history to understand the user's query and answer based on the context.
-        Your name is Onasi AI, a friendly conversational chatbot
+        Your name is Onasi AI, a friendly conversational chatbot. Only answer based on the provided context.
+        If answer is not in given context, pleasr respond I don't know.
         <b>Instructions:</b>
         - Break down your response into bullet points using HTML tags and always format them nicely
         - There is a link break after each bullet point for better readability
         - Avoid markdown; always format output in clean HTML (no <html> tag).
-        - If the context is irrelevant or insufficient, reply with "I don't know."
+        - If the context is irrelevant or insufficient, reply with "I don't know."        
+        - If answer is not in given context, pleasr respond I don't know.
         - Never hallucinate information; use the provided context only.
         - Respond with detailed explanations when required but always concise.
         - Respond with bullet points when answer is longer than 2 sentences.
