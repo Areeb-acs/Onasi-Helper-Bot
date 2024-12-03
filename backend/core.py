@@ -174,6 +174,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         
 
         <b>Instructions:</b>
+        - Never mention users name unless he specifically asks for the name.
         - WHEN User mentions summarize, user mentions reword the above, for this please use only chat history and the latest information
         - If user asks summarize, then please just look at context and conversational history and neatly summarize, do not go out of context.
         
