@@ -146,7 +146,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         domain_retriever = docsearch.as_retriever(
             search_kwargs={
                 "filter": {},  # No filter applied for global search.
-                "k": 5  # Retrieve top 7 results.
+                "k": 4  # Retrieve top 7 results.
             }
         )
     else:
@@ -154,7 +154,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         domain_retriever = docsearch.as_retriever(
             search_kwargs={
                 "filter": {"domain": domain},  # Apply domain-specific filter.
-                "k": 10  # Retrieve top 10 results.
+                "k": 4  # Retrieve top 10 results.
             }
         )
 
@@ -187,7 +187,6 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         - If the context is irrelevant or insufficient, reply with "I don't know."        
         - If answer is not in given context, please respond I don't know.
         - Never hallucinate information; use the provided context only.
-        - Respond with detailed explanations when required but always concise.
         - Respond with bullet points when answer is longer than 2 sentences.
         - Please do not use Markdown, only HTML tags for bullet point formatting only <ul> and <li> elements
         - Please do not start with Response <b>Response:</b>, directly answer the question.
