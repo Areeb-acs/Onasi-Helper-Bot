@@ -69,7 +69,9 @@ def update_s3_file(new_content):
 
 # Initialize ChatGroq
 groq_api_key = os.getenv("GROQ_API_KEY")
+
 chat = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-70b-8192")
+
 # Preinitialize docsearch (can be reused across multiple queries)
 docsearch = Pinecone(index_name=INDEX_NAME, embedding=embeddings)
 
@@ -86,6 +88,44 @@ with open("./faq_data.json", "r") as f:
 
 
 
+def get_last_10_conversations():
+    """
+    Fetches the last 10 Q&A pairs from the S3 conversations file.
+
+    Returns:
+        List[dict]: A list of the last 10 conversations in the format:
+                    [{"user": "question1", "ai": "answer1"}, ...]
+    """
+    try:
+        # Fetch the content of the file from the S3 bucket
+        response = requests.get(FILE_URL)
+        if response.status_code == 200:
+            content = response.text
+        else:
+            logging.error(f"Failed to fetch conversation file: {response.status_code}")
+            return []
+
+        # Split content into individual conversations by the separator
+        entries = content.strip().split("==================================================")
+        conversations = []
+
+        for entry in entries:
+            # Process each entry to extract User and AI lines
+            lines = entry.strip().split("\n")
+            user_line = next((line.replace("User: ", "").strip() for line in lines if line.startswith("User:")), None)
+            ai_line = next((line.replace("AI: ", "").strip() for line in lines if line.startswith("AI:")), None)
+
+            # Append only valid entries with both User and AI content
+            if user_line and ai_line:
+                conversations.append({"user": user_line, "ai": ai_line})
+
+        # Return the last 10 conversations
+        return conversations[-5:] if len(conversations) > 5 else conversations
+
+    except Exception as e:
+        logging.error(f"Error fetching or parsing conversation file: {str(e)}")
+        return []
+
 
 def log_conversation(user_query, ai_response):
     """Logs the conversation to the public S3 file."""
@@ -95,23 +135,15 @@ def log_conversation(user_query, ai_response):
 def format_chat_history(chat_history):
     """
     Format the chat history into a readable string for inclusion in LLM input.
-    Supports lists of dictionaries or tuples.
     """
     if not chat_history:
         return "No previous history."
 
     formatted_history = ""
-    for i, entry in enumerate(chat_history):
-        if isinstance(entry, dict):  # If the entry is a dictionary
-            user_input = entry.get("user", "No input")
-            ai_response = entry.get("ai", "No response")
-        elif isinstance(entry, tuple) and len(entry) == 2:  # If the entry is a tuple with two elements
-            user_input, ai_response = entry
-        else:  # Fallback for unexpected structures
-            user_input = "Unknown format"
-            ai_response = "Unknown format"
-
-        formatted_history += f"\nUser: {user_input}\nAI: {ai_response}\n"
+    for entry in chat_history:
+        user_input = entry.get("user", "Unknown input")
+        ai_response = entry.get("ai", "Unknown response")
+        formatted_history += f"User: {user_input}\nAI: {ai_response}\n"
     
     return formatted_history.strip()
 
@@ -171,7 +203,7 @@ async def chat_endpoint(request: Request):
     # Use a dictionary for O(1) lookup instead of iterating through the list
     faq_lookup = {qa["question"].lower(): qa["answer"] for qa in faq_data}
     raw_answer = faq_lookup.get(question.lower())
-
+    chat_history = get_last_10_conversations()  # Fetch last 10 Q&A pairs from S3
     if raw_answer:
         log_conversation(question, raw_answer)
 
@@ -197,6 +229,8 @@ async def chat_endpoint(request: Request):
                 chat_history=format_chat_history(chat_history),
                 domain=domain
             )
+            
+            
             answer = generated_response.get("answer", "")
 
             # Log the conversation for debugging/auditing
