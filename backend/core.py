@@ -113,9 +113,9 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         - Never hallucinate information; use the provided context only.
         - Respond with detailed explanations when required but always concise.
         - Respond with bullet points when answer is longer than 2 sentences.
-        - Always use bullet points for lists and details and please do not use <html> elements
-        - ALWAYS RESPOND IN BULLET POINTS
-
+        - Please do not use Markdown, only HTML tags for bullet point formatting only <ul> and <li> elements
+        - Please do not start with Response <b>Response:</b>, directly answer the question.
+        - If answer is very short, no need for bullet points.
         <b>Current Query:</b> {input}
         <b>Context:</b> {context}
 
