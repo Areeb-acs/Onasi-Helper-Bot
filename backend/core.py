@@ -79,7 +79,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
 
 
     # Detect Summarization or Reword Requests
-    is_summary_request = any(keyword in query.lower() for keyword in ["re"])
+    is_summary_request = any(keyword in query.lower() for keyword in ["summarize", "summarise", "reword", "parahparse"])
 
     if is_summary_request:
             # Create the system message
@@ -89,6 +89,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
             """
             You are a helpful assistant. The user has asked for a summarization or rewording of the latest context.
             Use ONLY the provided chat history to create your response. Do not include additional information.
+            Please output a summary in your own words neatly summarizing the conversational history
 
             ALWAYS OUTPUT in <html> elements but never use the <html> tag itself.
             <b>Instructions:</b>
