@@ -203,7 +203,6 @@ async def chat_endpoint(request: Request):
     # Use a dictionary for O(1) lookup instead of iterating through the list
     faq_lookup = {qa["question"].lower(): qa["answer"] for qa in faq_data}
     raw_answer = faq_lookup.get(question.lower())
-    chat_history = get_last_10_conversations()  # Fetch last 10 Q&A pairs from S3
     if raw_answer:
         log_conversation(question, raw_answer)
 
@@ -220,6 +219,8 @@ async def chat_endpoint(request: Request):
         """
         Generate the response using LLM with streaming.
         """
+        chat_history = get_last_10_conversations()  # Fetch last 10 Q&A pairs from S3
+
         try:
             # Pass chat history and other params to `run_llm`
             generated_response = run_llm(
