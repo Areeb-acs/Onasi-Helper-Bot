@@ -12,7 +12,6 @@ from langchain.chains.retrieval import create_retrieval_chain
 from langchain.chains.history_aware_retriever import create_history_aware_retriever
 from langchain.prompts import ChatPromptTemplate
 from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain_pinecone import Pinecone
 from langchain_groq import ChatGroq
 
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
@@ -162,7 +161,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         domain_retriever = docsearch.as_retriever(
             search_kwargs={
                 "filter": {"domain": domain},  # Apply domain-specific filter.
-                "k": 10  # Retrieve top 10 results.
+                "k": 12  # Retrieve top 10 results.
             }
         )
         
