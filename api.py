@@ -253,14 +253,9 @@ async def chat_endpoint(request: Request):
             # Log the conversation for debugging/auditing
             log_conversation(question, answer)
 
-            # Stream response chunks
-            for chunk in answer:
-                yield chunk
+            # Return the full response as JSON
+            return JSONResponse(content={"response": answer})
 
         except Exception as e:
             logging.error(f"Error generating response: {str(e)}")
-            yield "An error occurred while generating the response."
-
-    logging.info(f"Processing query: {question}, Domain: {domain}")
-    return StreamingResponse(response_generator(), media_type="text/plain")
-
+            raise HTTPException(status_code=500, detail="An error occurred while generating the response.")
