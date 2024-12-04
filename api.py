@@ -66,6 +66,10 @@ def update_s3_file(new_content):
     except Exception as e:
         logging.error(f"Error updating file in S3: {str(e)}")
 
+import time
+
+start_time = time.time()
+print(f"QA chain execution took: {time.time() - start_time:.2f} seconds")
 
 # Initialize ChatGroq
 groq_api_key = os.getenv("GROQ_API_KEY")
@@ -164,6 +168,9 @@ async def chat_endpoint(request: Request):
     5. Log the conversation to S3 (batched for efficiency).
     6. Stream the response back to the user.
     """
+
+   
+
     data = await request.json()
     question = data.get("question")
     domain = data.get("domain", None)
@@ -182,8 +189,7 @@ async def chat_endpoint(request: Request):
 
         # Log new session initialization
         update_s3_file(f"New Session Initialized: {session_id}\n{'=' * 50}\n")
-
-    chat_history = get_last_10_conversations()  # Fetch last 10 Q&A pairs from S3
+        
 
     # ------------------------------
     # 2. Determine Domain
@@ -222,7 +228,9 @@ async def chat_endpoint(request: Request):
         Generate the response using LLM with streaming.
         """
         chat_history = get_last_10_conversations()  # Fetch last 10 Q&A pairs from S3
+        import time
 
+        start_time = time.time()
         try:
             # Pass chat history and other params to `run_llm`
             generated_response = run_llm(
@@ -232,6 +240,9 @@ async def chat_endpoint(request: Request):
                 chat_history=format_chat_history(chat_history),
                 domain=domain
             )
+                
+            print(f"QA chain execution took: {time.time() - start_time:.2f} seconds")
+
 
             # Handle different types of `generated_response`
             if isinstance(generated_response, str):
@@ -260,6 +271,7 @@ async def chat_endpoint(request: Request):
         except Exception as e:
             logging.error(f"Error generating response: {str(e)}")
             yield "An error occurred while generating the response."
+
 
     logging.info(f"Processing query: {question}, Domain: {domain}")
     return StreamingResponse(response_generator(), media_type="text/plain")

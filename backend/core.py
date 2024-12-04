@@ -77,7 +77,12 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         str: AI-generated response based on the query and context.
     """
 
+    import time
 
+    # Start total timer
+    total_start = time.time()
+            # ------------------------------
+    embedding_start = time.time()
     # Detect Summarization or Reword Requests
     is_summary_request = any(keyword in query.lower() for keyword in ["summarize", "summarise", "reword", "parahparse"])
 
@@ -110,6 +115,8 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
             <b>Conversation History:</b> {chat_history}
             """
         )
+        # ------------------------------
+        # 1. Embedding Retrieval
 
         # Format the prompt with the input query and chat history
         formatted_prompt = summary_prompt.format(
@@ -135,6 +142,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
             logging.error(f"Error generating response: {str(e)}")
             return "An error occurred while generating the response."
 
+
     # ------------------------------
     # Proceed with the Standard QA Flow
     # ------------------------------
@@ -146,7 +154,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         domain_retriever = docsearch.as_retriever(
             search_kwargs={
                 "filter": {},  # No filter applied for global search.
-                "k": 4  # Retrieve top 7 results.
+                "k": 5  # Retrieve top 7 results.
             }
         )
     else:
@@ -157,6 +165,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
                 "k": 5  # Retrieve top 10 results.
             }
         )
+        
 
     # ------------------------------
     # 2. Define Chat Prompts
@@ -211,6 +220,8 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         """
     )
 
+
+
     # ------------------------------
     # 3. History-Aware Retriever
     # ------------------------------
@@ -236,6 +247,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         retriever=history_aware_retriever,  # Context-aware retriever.
         combine_docs_chain=stuff_documents_chain  # Combine documents for the final answer.
     )
+    
 
     # Run the QA chain with the query and formatted chat history.
     result = qa_chain.invoke({
