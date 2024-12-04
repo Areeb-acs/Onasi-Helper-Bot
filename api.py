@@ -12,6 +12,8 @@ from uuid import uuid4  # For generating unique session IDs
 from langchain_pinecone import Pinecone
 from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from fastapi import HTTPException
+from fastapi.responses import JSONResponse, HTMLResponse
 
 import requests
 
@@ -151,18 +153,11 @@ def format_chat_history(chat_history):
 async def get_root():
     return {"message": "Welcome to Onasi Helper Bot!"}
 
+
 @app.post("/chat")
 async def chat_endpoint(request: Request):
     """
     Chat endpoint for processing user queries and returning AI-generated responses.
-
-    Workflow:
-    1. Parse incoming request data.
-    2. Check for an existing session or initialize a new one.
-    3. Match the query against FAQ data for faster responses.
-    4. If not found in FAQ, proceed with LLM response generation.
-    5. Log the conversation to S3 (batched for efficiency).
-    6. Stream the response back to the user.
     """
     data = await request.json()
     question = data.get("question")
@@ -202,7 +197,6 @@ async def chat_endpoint(request: Request):
     # ------------------------------
     # 3. Optimize FAQ Matching
     # ------------------------------
-    # Use a dictionary for O(1) lookup instead of iterating through the list
     faq_lookup = {qa["question"].lower(): qa["answer"] for qa in faq_data}
     raw_answer = faq_lookup.get(question.lower())
     if raw_answer:
@@ -210,52 +204,44 @@ async def chat_endpoint(request: Request):
 
         # Format FAQ response into HTML
         formatted_response = chat.invoke(HTML_PROMPT_TEMPLATE.format(answer=raw_answer))
-        return {
-            "response": HTMLResponse(content=formatted_response.content)
-        }
+        return JSONResponse(content={"response": formatted_response.content})
 
     # ------------------------------
-    # 4. LLM Response Generation
+    # 4. LLM Response Generation Without Streaming
     # ------------------------------
-    async def response_generator():
-        """
-        Generate the response using LLM with streaming.
-        """
-        chat_history = get_last_10_conversations()  # Fetch last 10 Q&A pairs from S3
+    try:
+        # Pass chat history and other params to `run_llm`
+        generated_response = run_llm(
+            query=question,
+            chat=chat,
+            docsearch=docsearch,
+            chat_history=format_chat_history(chat_history),
+            domain=domain
+        )
 
-        try:
-            # Pass chat history and other params to `run_llm`
-            generated_response = run_llm(
-                query=question,
-                chat=chat,
-                docsearch=docsearch,
-                chat_history=format_chat_history(chat_history),
-                domain=domain
-            )
+        # Handle different types of `generated_response`
+        if isinstance(generated_response, str):
+            # If the response is a string, treat it as the full answer
+            answer = generated_response
 
-            # Handle different types of `generated_response`
-            if isinstance(generated_response, str):
-                # If the response is a string, treat it as the full answer
-                answer = generated_response
+        elif isinstance(generated_response, dict):
+            # If the response is a dictionary, extract the "answer" key
+            answer = generated_response.get("answer", "")
 
-            elif isinstance(generated_response, dict):
-                # If the response is a dictionary, extract the "answer" key
-                answer = generated_response.get("answer", "")
+        elif hasattr(generated_response, "content"):
+            # If the response is an object with a "content" attribute
+            answer = generated_response.content
 
-            elif hasattr(generated_response, "content"):
-                # If the response is an object with a "content" attribute
-                answer = generated_response.content
+        else:
+            # Unexpected response type
+            raise TypeError(f"Unexpected response type: {type(generated_response)}")
 
-            else:
-                # Unexpected response type
-                raise TypeError(f"Unexpected response type: {type(generated_response)}")
+        # Log the conversation for debugging/auditing
+        log_conversation(question, answer)
 
-            # Log the conversation for debugging/auditing
-            log_conversation(question, answer)
+        # Return the full response as JSON
+        return JSONResponse(content={"response": answer})
 
-            # Return the full response as JSON
-            return JSONResponse(content={"response": answer})
-
-        except Exception as e:
-            logging.error(f"Error generating response: {str(e)}")
-            raise HTTPException(status_code=500, detail="An error occurred while generating the response.")
+    except Exception as e:
+        logging.error(f"Error generating response: {str(e)}")
+        raise HTTPException(status_code=500, detail="An error occurred while generating the response.")
