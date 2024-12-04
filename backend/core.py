@@ -213,6 +213,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
     rephrase_prompt = ChatPromptTemplate.from_template(
         """
         Rephrase the follow-up query to make it a standalone question, considering the conversation history.
+        - No need to keep saying hello to the user.
 
         Follow-Up Input: {input}
 
