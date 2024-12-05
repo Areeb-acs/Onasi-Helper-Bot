@@ -27,7 +27,6 @@ import pyodbc
 
 INDEX_NAME = "rcm-final-app"
 embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")
-
 groq_api_key = os.getenv("GROQ_API_KEY")
 # Initialize Pinecone
 
@@ -161,7 +160,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         domain_retriever = docsearch.as_retriever(
             search_kwargs={
                 "filter": {"domain": domain},  # Apply domain-specific filter.
-                "k": 12  # Retrieve top 10 results.
+                "k": 10  # Retrieve top 10 results.
             }
         )
         
@@ -182,7 +181,6 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         
 
         <b>Instructions:</b>
-        - When user asks what is my name, respond with Hello + his/her name!
         - WHEN User mentions summarize, user mentions reword the above, for this please use only chat history and the latest information
         - If user asks summarize, then please just look at context and conversational history and neatly summarize, do not go out of context.
         

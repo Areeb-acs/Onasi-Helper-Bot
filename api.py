@@ -68,29 +68,6 @@ def update_s3_file(new_content):
 
 import time
 
-start_time = time.time()
-print(f"QA chain execution took: {time.time() - start_time:.2f} seconds")
-
-# Initialize ChatGroq
-groq_api_key = os.getenv("GROQ_API_KEY")
-
-chat = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-70b-8192")
-
-# Preinitialize docsearch (can be reused across multiple queries)
-docsearch = Pinecone(index_name=INDEX_NAME, embedding=embeddings)
-
-# HTML formatting prompt template
-HTML_PROMPT_TEMPLATE = """
-Please use the answer and keep it exactly the same, just change to html format ONLY.
-Answer to format: {answer}
-"""
-
-
-# Load FAQ data
-with open("./faq_data.json", "r") as f:
-    faq_data = json.load(f)
-
-
 
 def get_last_10_conversations():
     """
@@ -130,10 +107,92 @@ def get_last_10_conversations():
         logging.error(f"Error fetching or parsing conversation file: {str(e)}")
         return []
 
+start_time = time.time()
+print(f"QA chain execution took: {time.time() - start_time:.2f} seconds")
+
+# Initialize ChatGroq
+groq_api_key = os.getenv("GROQ_API_KEY")
+
+chat = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-70b-8192")
+
+# Preinitialize docsearch (can be reused across multiple queries)
+docsearch = Pinecone(index_name=INDEX_NAME, embedding=embeddings)
+
+# HTML formatting prompt template
+HTML_PROMPT_TEMPLATE = """
+Please use the answer and keep it exactly the same, just change to html format ONLY.
+Answer to format: {answer}
+"""
+
+
+# Load FAQ data
+with open("./faq_data.json", "r") as f:
+    faq_data = json.load(f)
+
+
+def get_conversation_by_session_id(session_id):
+    """
+    Fetches all conversations for a specific session ID and returns them in a structured format.
+
+    Args:
+        session_id (str): The session ID to filter conversations by.
+
+    Returns:
+        List[dict]: A list of conversations in the format:
+                    [{"user": "question1", "ai": "answer1"}, ...]
+    """
+    try:
+        # Fetch the content of the file from the S3 bucket
+        response = requests.get(FILE_URL)
+        if response.status_code != 200:
+            logging.error(f"Failed to fetch conversation file: {response.status_code}")
+            return []
+
+        content = response.text
+
+        # Check if the session ID exists
+        session_marker = f"New Session Initialized: {session_id}"
+        if session_marker not in content:
+            logging.info(f"Session ID {session_id} not found.")
+            update_s3_file(f"New Session Initialized: {session_id}\n{'=' * 50}\n")
+            return []
+
+        # Split content into lines and process from the session marker onward
+        lines = content.splitlines()
+        conversations = []
+        in_session = False
+        user_line = None  # Initialize variables outside the loop
+        ai_line = None
+
+        for line in lines:
+            line = line.strip()
+
+            if line.startswith("New Session Initialized:"):
+                # Check if we reached the target session marker
+                if line == session_marker:
+                    in_session = True  # Start capturing this session
+                elif in_session:
+                    break  # Exit when the next session starts
+
+            elif in_session:
+                # Capture user and AI lines within the session
+                if line.startswith("User:"):
+                    user_line = line.replace("User: ", "").strip()
+                elif line.startswith("AI:") and user_line:
+                    ai_line = line.replace("AI: ", "").strip()
+                    # Append the pair only when both user and AI lines are complete
+                    conversations.append({"user": user_line, "ai": ai_line})
+                    user_line, ai_line = None, None  # Reset variables after appending
+
+        return conversations
+
+    except Exception as e:
+        logging.error(f"Error fetching or parsing conversation file: {str(e)}")
+        return []
 
 def log_conversation(user_query, ai_response):
     """Logs the conversation to the public S3 file."""
-    new_entry = f"User: {user_query}\nAI: {ai_response}\n{'=' * 50}\n"
+    new_entry = f"User: {user_query}\nAI: {ai_response}\n\n"
     update_s3_file(new_entry)
     
 def format_chat_history(chat_history):
@@ -172,9 +231,12 @@ async def chat_endpoint(request: Request):
    
 
     data = await request.json()
+    # print(data)
     question = data.get("question")
+    session_id = data.get("session_id")
     domain = data.get("domain", None)
-    chat_history = [data.get("chat_history", [])]
+    chat_history = get_conversation_by_session_id(session_id)
+    print(chat_history)
 
     if not question:
         return {"error": "Question is required."}
@@ -183,12 +245,9 @@ async def chat_endpoint(request: Request):
     # 1. Initialize or Fetch Session
     # ------------------------------
     if not chat_history:
-        session_id = str(uuid4())  # Generate a unique session ID for new sessions
         logging.info(f"Generated new session ID: {session_id}")
-        chat_history = [{"user": f"Session ID: {session_id}", "ai": "Welcome! How can I assist you?"}]
 
         # Log new session initialization
-        update_s3_file(f"New Session Initialized: {session_id}\n{'=' * 50}\n")
         
 
     # ------------------------------
@@ -212,7 +271,6 @@ async def chat_endpoint(request: Request):
     faq_lookup = {qa["question"].lower(): qa["answer"] for qa in faq_data}
     raw_answer = faq_lookup.get(question.lower())
     if raw_answer:
-        log_conversation(question, raw_answer)
 
         # Format FAQ response into HTML
         formatted_response = chat.invoke(HTML_PROMPT_TEMPLATE.format(answer=raw_answer))
@@ -227,7 +285,7 @@ async def chat_endpoint(request: Request):
         """
         Generate the response using LLM with streaming.
         """
-        chat_history = get_last_10_conversations()  # Fetch last 10 Q&A pairs from S3
+        # conversation_data = get_last_10_conversations()  # Fetch last 10 Q&A pairs from S3
         import time
 
         start_time = time.time()
