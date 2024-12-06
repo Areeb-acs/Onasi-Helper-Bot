@@ -130,16 +130,20 @@ with open("./faq_data.json", "r") as f:
     faq_data = json.load(f)
 
 
+
+
+
+
 def get_conversation_by_session_id(session_id):
     """
-    Fetches all conversations for a specific session ID and returns them in a structured format.
+    Fetches all user queries for a specific session ID and returns them in a structured format.
 
     Args:
         session_id (str): The session ID to filter conversations by.
 
     Returns:
         List[dict]: A list of conversations in the format:
-                    [{"user": "question1", "ai": "answer1"}, ...]
+                    [{"user": "question1"}, ...]
     """
     try:
         # Fetch the content of the file from the S3 bucket
@@ -161,8 +165,6 @@ def get_conversation_by_session_id(session_id):
         lines = content.splitlines()
         conversations = []
         in_session = False
-        user_line = None  # Initialize variables outside the loop
-        ai_line = None
 
         for line in lines:
             line = line.strip()
@@ -175,14 +177,10 @@ def get_conversation_by_session_id(session_id):
                     break  # Exit when the next session starts
 
             elif in_session:
-                # Capture user and AI lines within the session
+                # Capture only user lines within the session
                 if line.startswith("User:"):
-                    user_line = line.replace("User: ", "").strip()
-                elif line.startswith("AI:") and user_line:
-                    ai_line = line.replace("AI: ", "").strip()
-                    # Append the pair only when both user and AI lines are complete
-                    conversations.append({"user": user_line, "ai": ai_line})
-                    user_line, ai_line = None, None  # Reset variables after appending
+                    user_query = line.replace("User: ", "").strip()
+                    conversations.append({"user": user_query})
 
         return conversations
 
@@ -205,8 +203,9 @@ def format_chat_history(chat_history):
     formatted_history = ""
     for entry in chat_history:
         user_input = entry.get("user", "Unknown input")
-        ai_response = entry.get("ai", "Unknown response")
-        formatted_history += f"User: {user_input}\nAI: {ai_response}\n"
+        # ai_response = entry.get("ai", "Unknown response")
+        # formatted_history += f"User: {user_input}\nAI: {ai_response}\n"
+        formatted_history += f"User: {user_input}\n"
     
     return formatted_history.strip()
 

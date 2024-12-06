@@ -185,7 +185,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         Use the provided conversation history to understand the user's query and answer based on the context only.
         
         If the user asks a question, please see if the question has already been answered in chat history and respond accordingly
-        Learn to say I do not know. This is important to avoid hallucinations.
+        Learn to say I do not know. This is important to avoid hallucinations. Please answer directly, do not include Response: in start of your response.
         
         Do not mention step numbers, the numbering is only for the order. 
         No need to start response with bullet point but then you eventually need to provide bullet points.
