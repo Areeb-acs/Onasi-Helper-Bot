@@ -82,37 +82,37 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
             # ------------------------------
     embedding_start = time.time()
     # Detect Summarization or Reword Requests
-    is_summary_request = any(keyword in query.lower() for keyword in ["summarize", "summarise", "reword", "parahparse"])
-
+    # is_summary_request = any(keyword in query.lower() for keyword in ["summarize", "summarise", "reword", "parahparse"])
+    is_summary_request = False
     if is_summary_request:
             # Create the system message
 
         # Create the prompt template
-        summary_prompt = ChatPromptTemplate.from_template(
-            """
-            You are a helpful assistant. The user has asked for a summarization or rewording of the latest context.
-            Use ONLY the provided chat history to create your response. Do not include additional information.
-            Please output a summary in your own words neatly summarizing the conversational history.
-            Please only use the last line to use as information only.
+        # summary_prompt = ChatPromptTemplate.from_template(
+        #     """
+        #     You are a helpful assistant. The user has asked for a summarization or rewording of the latest context.
+        #     Use ONLY the provided chat history to create your response. Do not include additional information.
+        #     Please output a summary in your own words neatly summarizing the AI response only.
+        #     Please only use the last line to use as information only.
 
-            ALWAYS OUTPUT in <html> elements but never use the <html> tag itself.
-            <b>Instructions:</b>
-            - Summarize or reword the provided context as requested.
-            - Use clear and concise language.
-            - Respond with bullet points if necessary but do not include additional explanations.
-            - Create sub-bullet points as well using nested <ul> tags for better readability.
-            - There is a line break after each bullet point for better readability.
-            - Avoid markdown; always format output in clean HTML (no <html> tag).
+        #     ALWAYS OUTPUT in <html> elements but never use the <html> tag itself.
+        #     <b>Instructions:</b>
+        #     - Summarize or reword the provided context as requested.
+        #     - Use clear and concise language.
+        #     - Respond with bullet points if necessary but do not include additional explanations.
+        #     - Create sub-bullet points as well using nested <ul> tags for better readability.
+        #     - There is a line break after each bullet point for better readability.
+        #     - Avoid markdown; always format output in clean HTML (no <html> tag).
             
-            - If the context is irrelevant or insufficient, reply with "I don't know."
-            - Never hallucinate information; use the provided chat history only.
-            - Respond with detailed explanations when required but always concise.
-            - Respond with bullet points when the answer is longer than 2 sentences.
+        #     - If the context is irrelevant or insufficient, reply with "I don't know."
+        #     - Never hallucinate information; use the provided chat history only.
+        #     - Respond with detailed explanations when required but always concise.
+        #     - Respond with bullet points when the answer is longer than 2 sentences.
 
-            <b>Current Query:</b> {input}
-            <b>Conversation History:</b> {chat_history}
-            """
-        )
+        #     <b>Current Query:</b> {input}
+        #     <b>Conversation History:</b> {chat_history}
+        #     """
+        # )
         # ------------------------------
         # 1. Embedding Retrieval
 
