@@ -236,7 +236,7 @@ async def chat_endpoint(request: Request):
     session_id = data.get("session_id")
     domain = data.get("domain", None)
     chat_history = get_conversation_by_session_id(session_id)
-    print(chat_history)
+    print(format_chat_history(chat_history))
 
     if not question:
         return {"error": "Question is required."}
