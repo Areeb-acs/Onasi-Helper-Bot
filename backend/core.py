@@ -173,7 +173,9 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         """
         
         RULE:
-        ALWAYS OUTPUT IN HTML TAGS and use bullet points, NEVER USE THE <html> TAG ITSELF. NEVER USE MARKDOWN.  Create sub-bullet points as well using nested <ul> tags for better readability.
+        ALWAYS OUTPUT IN HTML TAGS and use bullet points for medium to long answers, NEVER USE THE <html> TAG ITSELF. NEVER USE MARKDOWN.  
+        Create sub-bullet points as well using nested <ul> tags for better readability. If response will be 2-3 words, no need to use bullet points please.
+        Please if response is more than 2 sentences, then use bullet points shown in html tags.
         
         If the user asks what is my name or any other question like this, look in conversation history section. 
         If you cannot find the answer to any question in context and chat history, please say I don't know only.
