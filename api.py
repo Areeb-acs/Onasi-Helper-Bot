@@ -134,7 +134,7 @@ with open("./faq_data.json", "r") as f:
 
 
 
-def get_conversation_by_session_id(session_id, recent_count=3):
+def get_conversation_by_session_id(session_id, recent_count=4):
     """
     Fetches the last few user queries and AI responses for a specific session ID.
 
