@@ -200,11 +200,14 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         - Do not prepend "Response:" to your answers. Start directly with the response content.
         - Always avoid long-winded explanations. Be concise, relevant, and user-focused.
 
-        <b>Current Query:</b> {input}
+
 
         <b>Context:</b> {context}
 
         <b>Chat History:</b> {chat_history}
+        
+        
+        <b>Current Query:</b> {input}
         """
     )
 
