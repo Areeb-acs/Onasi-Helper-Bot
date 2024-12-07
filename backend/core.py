@@ -152,7 +152,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         domain_retriever = docsearch.as_retriever(
             search_kwargs={
                 "filter": {},  # No filter applied for global search.
-                "k": 4  # Retrieve top 7 results.
+                "k": 3  # Retrieve top 7 results.
             }
         )
     else:
@@ -160,7 +160,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         domain_retriever = docsearch.as_retriever(
             search_kwargs={
                 "filter": {"domain": domain},  # Apply domain-specific filter.
-                "k": 4  # Retrieve top 10 results.
+                "k": 3  # Retrieve top 10 results.
             }
         )
         

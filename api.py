@@ -134,16 +134,17 @@ with open("./faq_data.json", "r") as f:
 
 
 
-def get_conversation_by_session_id(session_id):
+def get_conversation_by_session_id(session_id, recent_count=3):
     """
-    Fetches all user queries for a specific session ID and returns them in a structured format.
+    Fetches the last few user queries and AI responses for a specific session ID.
 
     Args:
         session_id (str): The session ID to filter conversations by.
+        recent_count (int): Number of most recent conversations to return.
 
     Returns:
-        List[dict]: A list of conversations in the format:
-                    [{"user": "question1"}, ...]
+        List[dict]: A list of the last `recent_count` conversations in the format:
+                    [{"user": "question1", "ai": "response1"}, ...]
     """
     try:
         # Fetch the content of the file from the S3 bucket
@@ -161,40 +162,59 @@ def get_conversation_by_session_id(session_id):
             update_s3_file(f"New Session Initialized: {session_id}\n{'=' * 50}\n")
             return []
 
-        # Split content into lines and process from the session marker onward
+        # Split content into lines and process only the relevant session
         lines = content.splitlines()
         conversations = []
         in_session = False
+        current_user = None
+        current_ai = []
 
         for line in lines:
             line = line.strip()
 
             if line.startswith("New Session Initialized:"):
-                # Check if we reached the target session marker
+                # Check if this is the target session
                 if line == session_marker:
                     in_session = True  # Start capturing this session
+                    logging.info(f"Started capturing session: {session_id}")
                 elif in_session:
-                    break  # Exit when the next session starts
+                    # Stop capturing if a new session starts
+                    logging.info("Reached the next session marker. Stopping capture.")
+                    break
 
             elif in_session:
-                # Capture only user lines within the session
                 if line.startswith("User:"):
-                    user_query = line.replace("User: ", "").strip()
-                    conversations.append({"user": user_query})
-                if line.startswith("AI:"):
-                    user_query = line.replace("AI: ", "").strip()
-                    conversations.append({"ai": user_query})
+                    # Save the previous conversation if a new user query starts
+                    if current_user and current_ai:
+                        conversations.append({"user": current_user, "ai": "\n".join(current_ai)})
+                        current_ai = []
 
-        # Keep only the last 5 conversations
-        return conversations[-5:]
+                    # Start a new user query
+                    current_user = line.replace("User: ", "").strip()
+
+                elif line.startswith("AI:"):
+                    # Collect all AI response lines
+                    current_ai.append(line.replace("AI: ", "").strip())
+
+                else:
+                    # Append multi-line AI responses
+                    if current_ai:
+                        current_ai.append(line)
+
+        # Append the final conversation if it exists
+        if current_user and current_ai:
+            conversations.append({"user": current_user, "ai": "\n".join(current_ai)})
+
+        # Keep only the most recent conversations
+        logging.info(f"Captured conversations: {conversations}")
+        return conversations[-recent_count:]
 
     except Exception as e:
         logging.error(f"Error fetching or parsing conversation file: {str(e)}")
         return []
-
 def log_conversation(user_query, ai_response):
     """Logs the conversation to the public S3 file."""
-    new_entry = f"User: {user_query}\nAI: {ai_response}\n\n"
+    new_entry = f"\nUser: {user_query}\nAI: {ai_response}\n"
     update_s3_file(new_entry)
     
 def format_chat_history(chat_history):
