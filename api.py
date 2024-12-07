@@ -69,43 +69,43 @@ def update_s3_file(new_content):
 import time
 
 
-def get_last_10_conversations():
-    """
-    Fetches the last 10 Q&A pairs from the S3 conversations file.
+# def get_last_10_conversations():
+#     """
+#     Fetches the last 10 Q&A pairs from the S3 conversations file.
 
-    Returns:
-        List[dict]: A list of the last 10 conversations in the format:
-                    [{"user": "question1", "ai": "answer1"}, ...]
-    """
-    try:
-        # Fetch the content of the file from the S3 bucket
-        response = requests.get(FILE_URL)
-        if response.status_code == 200:
-            content = response.text
-        else:
-            logging.error(f"Failed to fetch conversation file: {response.status_code}")
-            return []
+#     Returns:
+#         List[dict]: A list of the last 10 conversations in the format:
+#                     [{"user": "question1", "ai": "answer1"}, ...]
+#     """
+#     try:
+#         # Fetch the content of the file from the S3 bucket
+#         response = requests.get(FILE_URL)
+#         if response.status_code == 200:
+#             content = response.text
+#         else:
+#             logging.error(f"Failed to fetch conversation file: {response.status_code}")
+#             return []
 
-        # Split content into individual conversations by the separator
-        entries = content.strip().split("==================================================")
-        conversations = []
+#         # Split content into individual conversations by the separator
+#         entries = content.strip().split("==================================================")
+#         conversations = []
 
-        for entry in entries:
-            # Process each entry to extract User and AI lines
-            lines = entry.strip().split("\n")
-            user_line = next((line.replace("User: ", "").strip() for line in lines if line.startswith("User:")), None)
-            ai_line = next((line.replace("AI: ", "").strip() for line in lines if line.startswith("AI:")), None)
+#         for entry in entries:
+#             # Process each entry to extract User and AI lines
+#             lines = entry.strip().split("\n")
+#             user_line = next((line.replace("User: ", "").strip() for line in lines if line.startswith("User:")), None)
+#             ai_line = next((line.replace("AI: ", "").strip() for line in lines if line.startswith("AI:")), None)
 
-            # Append only valid entries with both User and AI content
-            if user_line and ai_line:
-                conversations.append({"user": user_line, "ai": ai_line})
+#             # Append only valid entries with both User and AI content
+#             if user_line and ai_line:
+#                 conversations.append({"user": user_line, "ai": ai_line})
 
-        # Return the last 10 conversations
-        return conversations[-1:] if len(conversations) > 1 else conversations
+#         # Return the last 10 conversations
+#         return conversations[-1:] if len(conversations) > 1 else conversations
 
-    except Exception as e:
-        logging.error(f"Error fetching or parsing conversation file: {str(e)}")
-        return []
+#     except Exception as e:
+#         logging.error(f"Error fetching or parsing conversation file: {str(e)}")
+#         return []
 
 start_time = time.time()
 print(f"QA chain execution took: {time.time() - start_time:.2f} seconds")

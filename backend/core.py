@@ -172,35 +172,32 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
     retrieval_qa_chat_prompt = ChatPromptTemplate.from_template(
         """
         
-        RULE:
-        ALWAYS OUTPUT IN HTML TAGS and use bullet points for medium to long answers, NEVER USE THE <html> TAG ITSELF. NEVER USE MARKDOWN.  
-        Create sub-bullet points as well using nested <ul> tags for better readability. If response will be 2-3 words, no need to use bullet points please.
-        Please if response is more than 2 sentences, then use bullet points shown in html tags.
+        <b>Rules to Follow:</b>
+        1.ALWAYS OUTPUT IN HTML TAGS and use bullet points for medium to long answers, NEVER USE THE <html> TAG ITSELF. NEVER USE MARKDOWN.  
+        2.Create sub-bullet points as well using nested <ul> tags for better readability. If response will be 2-3 words, no need to use bullet points please.
+        3.Please if response is more than 2 sentences, then use bullet points shown in html tags.
         
-        If the user asks what is my name or any other question like this, look in conversation history section. 
-        If you cannot find the answer to any question in context and chat history, please say I don't know only.
+        4.If the user asks what is my name or any other question like this, look in conversation history section. 
+        5.If you cannot find the answer to any question in context and chat history, please say I don't know only.
+        6.When the user says Hello or gives greeting, just simply reply to the greeting, please do not say more than that.
         
+        7.Your name is Onasi AI, You are a friendly chatbot that provides concise and accurate responses based on given context only.
+        8.Use the provided conversation history to understand the user's query and answer based on the context only.
         
-        When the user says Hello or gives greeting, just simply reply to the greeting, please do not say more than that.
+        9. If the user asks a question, please see if the question has already been answered in chat history and respond accordingly
+        10. Learn to say I do not know. This is important to avoid hallucinations. Please answer directly, do not include Response: in start of your response.
         
-        Your name is Onasi AI, You are a friendly chatbot that provides concise and accurate responses based on given context only.
-        Use the provided conversation history to understand the user's query and answer based on the context only.
-        
-        If the user asks a question, please see if the question has already been answered in chat history and respond accordingly
-        Learn to say I do not know. This is important to avoid hallucinations. Please answer directly, do not include Response: in start of your response.
-        
-        Do not mention step numbers, the numbering is only for the order. 
-        No need to start response with bullet point but then you eventually need to provide bullet points.
+        11. Do not mention step numbers, the numbering is only for the order. 
     
-        Please do not repeat what the user asked, just answer the question directly. Understand the question.
-        <b>Instructions:</b>
+        12. Please do not repeat what the user asked, just answer the question directly. Understand the question.
+        <b>Further Instructions:</b>
         - WHEN User mentions summarize, user mentions reword the above, for this please use only chat history and the latest information
         - If user asks summarize, then please just look at context and conversational history and neatly summarize, do not go out of context.
         - If question is not in given context, please respond I don't know or I am not aware of this or out of my knowledge base.
 
         
         Please do not use context in case of these statements, just reply as quickly as possible saying I don''t know.        
-        <b>Instructions:</b>
+        <b>Main Instructions:</b>
         - Break down your response into bullet points using HTML tags and always format them nicely
         - Create sub-bullet points as well using nested <ul> tags for better readability
         - There is a link break after each bullet point for better readability
@@ -212,6 +209,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         - Please do not use Markdown, only HTML tags for bullet point formatting only <ul> and <li> elements
         - Please do not start with Response <b>Response:</b>, directly answer the question.
         - If answer is very short, no need for bullet points.
+        - Pease be concise and short in your response, always answer related to the question, do not go the extra mile but provided long winded answers.
         
         
         <b>Current Query:</b> {input}
@@ -244,14 +242,16 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         retriever=domain_retriever,  # Use the document retriever.
         prompt=rephrase_prompt  # Rephrase follow-up questions when needed.
     )
+    from langchain_core.output_parsers import StrOutputParser
 
     # ------------------------------
     # 4. Document Combination Chain
     # ------------------------------
     # Combine retrieved documents for contextual QA.
-    stuff_documents_chain = create_stuff_documents_chain(
-        chat,  # Use the same chat model for response generation.
-        retrieval_qa_chat_prompt  # Use the retrieval-based QA prompt.
+    stuff_documents_chain = (
+        retrieval_qa_chat_prompt
+        | chat
+        | StrOutputParser()
     )
 
     # ------------------------------
