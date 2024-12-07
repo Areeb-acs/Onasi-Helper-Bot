@@ -242,16 +242,14 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         retriever=domain_retriever,  # Use the document retriever.
         prompt=rephrase_prompt  # Rephrase follow-up questions when needed.
     )
-    from langchain_core.output_parsers import StrOutputParser
 
     # ------------------------------
     # 4. Document Combination Chain
     # ------------------------------
     # Combine retrieved documents for contextual QA.
-    stuff_documents_chain = (
-        retrieval_qa_chat_prompt
-        | chat
-        | StrOutputParser()
+    stuff_documents_chain = create_stuff_documents_chain(
+        chat,  # Use the same chat model for response generation.
+        retrieval_qa_chat_prompt  # Use the retrieval-based QA prompt.
     )
 
     # ------------------------------
