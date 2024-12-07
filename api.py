@@ -21,15 +21,15 @@ import requests
 load_dotenv()
 
 # GitHub Configuration
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-REPO_OWNER = os.getenv("REPO_OWNER")
-REPO_NAME = os.getenv("REPO_NAME")
-FILE_PATH = os.getenv("FILE_PATH")
-BRANCH = os.getenv("BRANCH", "main")
+# GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+# REPO_OWNER = os.getenv("REPO_OWNER")
+# REPO_NAME = os.getenv("REPO_NAME")
+# FILE_PATH = os.getenv("FILE_PATH")
+# BRANCH = os.getenv("BRANCH", "main")
 
 app = FastAPI()
 # File to store conversations
-CONVERSATION_LOG_FILE = "conversations.txt"
+# CONVERSATION_LOG_FILE = "conversations.txt"
 SUPPORTED_DOMAINS = {"RCM", "DHIS"}
 
 # A global dictionary to store session-specific chat histories in memory
@@ -326,10 +326,10 @@ async def chat_endpoint(request: Request):
                 yield chunk
 
         except Exception as e:
-            logging.error(f"Error generating response: {str(e)}")
+            # logging.error(f"Error generating response: {str(e)}")
             yield "An error occurred while generating the response."
 
 
-    logging.info(f"Processing query: {question}, Domain: {domain}")
+    # logging.info(f"Processing query: {question}, Domain: {domain}")
     return StreamingResponse(response_generator(), media_type="text/plain")
 
