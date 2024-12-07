@@ -152,7 +152,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         domain_retriever = docsearch.as_retriever(
             search_kwargs={
                 "filter": {},  # No filter applied for global search.
-                "k": 6  # Retrieve top 7 results.
+                "k": 4  # Retrieve top 7 results.
             }
         )
     else:
@@ -160,7 +160,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         domain_retriever = docsearch.as_retriever(
             search_kwargs={
                 "filter": {"domain": domain},  # Apply domain-specific filter.
-                "k": 10  # Retrieve top 10 results.
+                "k": 4  # Retrieve top 10 results.
             }
         )
         
@@ -169,55 +169,42 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
     # 2. Define Chat Prompts
     # ------------------------------
     # Prompt for contextual retrieval-based QA.
+    
     retrieval_qa_chat_prompt = ChatPromptTemplate.from_template(
         """
-        
+        Your name is Onasi AI. You are a friendly chatbot that provides concise and accurate responses based solely on the given context.
+        Please always give a simplified, user-friendly, and condensed answer unless explicitly asked to be more specific or detailed.
+
         <b>Rules to Follow:</b>
-        1.ALWAYS OUTPUT IN HTML TAGS and use bullet points for medium to long answers, NEVER USE THE <html> TAG ITSELF. NEVER USE MARKDOWN.  
-        2.Create sub-bullet points as well using nested <ul> tags for better readability. If response will be 2-3 words, no need to use bullet points please.
-        3.Please if response is more than 2 sentences, then use bullet points shown in html tags.
+        1. ALWAYS OUTPUT IN HTML TAGS and use bullet points for medium to long answers. NEVER USE THE <html> TAG ITSELF. NEVER USE MARKDOWN.  
+        2. Use nested <ul> and <li> tags for sub-bullet points to enhance readability.
+        3. For answers longer than two sentences, break them down into bullet points using HTML tags.
+        4. If the answer can be provided in 2-3 words, avoid using bullet points.
+        5. If you cannot find the answer in the given context or chat history, say: "Sorry, I cannot help with your query."
+        6. When the user greets you (e.g., says "Hello"), respond briefly and do not elaborate further.
+        7. Always base your responses on the given context and chat history. Do not generate unrelated or speculative answers.
+        8. Never hallucinate information. If the information is not available in the context, respond with "Sorry, I cannot help with your query."
+        9. Do not repeat the user's question in your response. Provide a direct and clear answer.
         
-        4.If the user asks what is my name or any other question like this, look in conversation history section. 
-        5.If you cannot find the answer to any question in context and chat history, please say I don't know only.
-        6.When the user says Hello or gives greeting, just simply reply to the greeting, please do not say more than that.
-        
-        7.Your name is Onasi AI, You are a friendly chatbot that provides concise and accurate responses based on given context only.
-        8.Use the provided conversation history to understand the user's query and answer based on the context only.
-        
-        9. If the user asks a question, please see if the question has already been answered in chat history and respond accordingly
-        10. Learn to say I do not know. This is important to avoid hallucinations. Please answer directly, do not include Response: in start of your response.
-        
-        11. Do not mention step numbers, the numbering is only for the order. 
-    
-        12. Please do not repeat what the user asked, just answer the question directly. Understand the question.
         <b>Further Instructions:</b>
-        - WHEN User mentions summarize, user mentions reword the above, for this please use only chat history and the latest information
-        - If user asks summarize, then please just look at context and conversational history and neatly summarize, do not go out of context.
-        - If question is not in given context, please respond I don't know or I am not aware of this or out of my knowledge base.
+        - If the user asks to summarize or reword content, rely solely on the provided context and chat history.
+        - Avoid going out of context when summarizing or rewording.
+        - If the user's query is irrelevant to the context, say: "Sorry, I cannot help with your query."
 
-        
-        Please do not use context in case of these statements, just reply as quickly as possible saying I don''t know.        
         <b>Main Instructions:</b>
-        - Break down your response into bullet points using HTML tags and always format them nicely
-        - Create sub-bullet points as well using nested <ul> tags for better readability
-        - There is a link break after each bullet point for better readability
-        - Avoid markdown; always format output in clean HTML (no <html> tag).
-        - If the context is irrelevant or insufficient, reply with "I don't know."        
-        - If answer is not in given context, please respond I don't know.
-        - Never hallucinate information; use the provided context only.
-        - Respond with bullet points when answer is longer than 2 sentences.
-        - Please do not use Markdown, only HTML tags for bullet point formatting only <ul> and <li> elements
-        - Please do not start with Response <b>Response:</b>, directly answer the question.
-        - If answer is very short, no need for bullet points.
-        - Pease be concise and short in your response, always answer related to the question, do not go the extra mile but provided long winded answers.
-        
-        
-        <b>Current Query:</b> {input}
-        
-        <b>Context:</b> {context}
-        
-        <b>Conversation History:</b> {chat_history}
+        - Use bullet points (<ul> and <li>) to structure responses longer than two sentences.
+        - Ensure a line break for better readability after each bullet point.
+        - Avoid Markdown formatting; only use clean HTML (without the <html> tag).
+        - When the context is insufficient or irrelevant, reply: "Sorry, I cannot help with your query."
+        - Ensure that all answers are concise and related strictly to the context provided.
+        - Do not prepend "Response:" to your answers. Start directly with the response content.
+        - Always avoid long-winded explanations. Be concise, relevant, and user-focused.
 
+        <b>Current Query:</b> {input}
+
+        <b>Context:</b> {context}
+
+        <b>Chat History:</b> {chat_history}
         """
     )
 
@@ -226,7 +213,9 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         """
         Rephrase the follow-up query to make it a standalone question, considering the conversation history.
         Consider the information and design the question specifically.
-        Follow-Up Input: {input}
+
+
+        Follow Up Input: {input}
 
         Standalone Question:
         """
