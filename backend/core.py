@@ -213,6 +213,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         """
         Rephrase the follow-up query to make it a standalone question, considering the conversation history.
         Consider the information and design the question specifically.
+        <b>Chat History:</b> {chat_history}
 
 
         Follow Up Input: {input}
