@@ -21,23 +21,23 @@ import requests
 load_dotenv()
 
 # GitHub Configuration
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-REPO_OWNER = os.getenv("REPO_OWNER")
-REPO_NAME = os.getenv("REPO_NAME")
-FILE_PATH = os.getenv("FILE_PATH")
-BRANCH = os.getenv("BRANCH", "main")
+# GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+# REPO_OWNER = os.getenv("REPO_OWNER")
+# REPO_NAME = os.getenv("REPO_NAME")
+# FILE_PATH = os.getenv("FILE_PATH")
+# BRANCH = os.getenv("BRANCH", "main")
 
 app = FastAPI()
 # File to store conversations
-CONVERSATION_LOG_FILE = "conversations.txt"
+# CONVERSATION_LOG_FILE = "conversations.txt"
 SUPPORTED_DOMAINS = {"RCM", "DHIS"}
 
 # A global dictionary to store session-specific chat histories in memory
 session_chat_histories = {}
 
 
-BUCKET_NAME = "onasi-chatbot"
-FILE_URL = "https://onasi-chatbot.s3.us-east-1.amazonaws.com/conversations.txt"
+# BUCKET_NAME = "onasi-chatbot"
+# FILE_URL = "https://onasi-chatbot.s3.us-east-1.amazonaws.com/conversations.txt"
 INDEX_NAME = "rcm-final-app"
 embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")
 
@@ -46,25 +46,33 @@ groq_api_key = os.getenv("GROQ_API_KEY")
 docsearch = Pinecone(index_name=INDEX_NAME, embedding=embeddings)
 
 
-def update_s3_file(new_content):
-    """Upload or update the file in S3."""
-    session_file_url = "https://onasi-chatbot.s3.us-east-1.amazonaws.com/conversations.txt"
+def update_local_file(new_content, file_path="conversation.txt"):
+    """
+    Append new content to a local file.
+    
+    Args:
+    new_content (str): The new content to append to the file.
+    file_path (str): Path to the local file. Defaults to 'conversation.txt'.
+    """
     try:
-        # Fetch current content
-        response = requests.get(session_file_url)
-        current_content = response.text if response.status_code == 200 else ""
+        # Read current content from the file if it exists
+        try:
+            with open(file_path, "r") as file:
+                current_content = file.read()
+        except FileNotFoundError:
+            # If the file doesn't exist, start with empty content
+            current_content = ""
 
         # Append new content
         updated_content = current_content + new_content
 
-        # Upload updated content
-        response = requests.put(session_file_url, data=updated_content)
-        if response.status_code == 200:
-            logging.info(f"S3 file updated successfully!")
-        else:
-            logging.error(f"Error updating file in S3: {response.status_code}")
+        # Write the updated content back to the file
+        with open(file_path, "w") as file:
+            file.write(updated_content)
+
+        logging.info(f"File '{file_path}' updated successfully!")
     except Exception as e:
-        logging.error(f"Error updating file in S3: {str(e)}")
+        logging.error(f"Error updating local file '{file_path}': {str(e)}")
 
 import time
 
@@ -159,7 +167,7 @@ def get_conversation_by_session_id(session_id, recent_count=4):
         session_marker = f"New Session Initialized: {session_id}"
         if session_marker not in content:
             logging.info(f"Session ID {session_id} not found.")
-            update_s3_file(f"New Session Initialized: {session_id}\n{'=' * 50}\n")
+            update_local_file(f"New Session Initialized: {session_id}\n{'=' * 50}\n")
             return []
 
         # Split content into lines and process only the relevant session
@@ -215,7 +223,7 @@ def get_conversation_by_session_id(session_id, recent_count=4):
 def log_conversation(user_query, ai_response):
     """Logs the conversation to the public S3 file."""
     new_entry = f"\nUser: {user_query}\nAI: {ai_response}\n"
-    update_s3_file(new_entry)
+    update_local_file(new_entry)
     
 def format_chat_history(chat_history):
     """

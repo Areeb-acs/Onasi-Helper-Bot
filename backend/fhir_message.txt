@@ -1,0 +1,830 @@
+{
+resourceType: "Bundle"
+id: "53220c25-41d7-428e-a819-38d3b8f09dd5"
+meta: {
+profile: [
+0: "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/bundle|1.0.0"
+]
+}
+type: "message"
+timestamp: "2024-12-04T17:45:54.446+03:00"
+entry: [
+{
+fullUrl: "urn:uuid:a127a296-ee84-4494-977c-0d28c4c526ac"
+resource: {
+resourceType: "MessageHeader"
+id: "a127a296-ee84-4494-977c-0d28c4c526ac"
+meta: {
+profile: [
+0: "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/message-header|1.0.0"
+]
+}
+eventCoding: {
+system: "http://nphies.sa/terminology/CodeSystem/ksa-message-events"
+code: "claim-request"
+}
+destination: [
+{
+endpoint: "http://nphies.sa/license/payer-license/INS-FHIR"
+receiver: {
+type: "Organization"
+identifier: {
+system: "http://nphies.sa/license/payer-license"
+value: "INS-FHIR"
+}
+}
+}
+]
+sender: {
+type: "Organization"
+identifier: {
+system: "http://nphies.sa/license/provider-license"
+value: "1010059725"
+}
+}
+source: {
+endpoint: "http://his.nhtc.com.sa"
+}
+focus: [
+{
+reference: "http://his.nhtc.com.sa/Claim/3036"
+}
+]
+}
+}
+{
+fullUrl: "http://his.nhtc.com.sa/Claim/3036"
+resource: {
+resourceType: "Claim"
+id: "3036"
+meta: {
+profile: [
+0: "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/professional-claim|1.0.0"
+]
+}
+extension: [
+{
+url: "http://nphies.sa/fhir/ksa/nphiesfs/StructureDefinition/extension-accountingPeriod"
+valueDateTime: "2024-12-04T17:45:54.446+03:00"
+}
+{
+url: "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/extension-encounter"
+valueReference: {
+reference: "http://his.nhtc.com.sa/Encounter/30"
+}
+}
+{
+url: "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/extension-episode"
+valueIdentifier: {
+system: "http://his.nhtc.com.sa/claim/episode"
+value: "CL00000311"
+}
+}
+]
+identifier: [
+{
+system: "http://his.nhtc.com.sa/Claim"
+value: "3036"
+}
+]
+status: "active"
+type: {
+coding: [
+{
+system: "http://terminology.hl7.org/CodeSystem/claim-type"
+code: "professional"
+}
+]
+}
+subType: {
+coding: [
+{
+system: "http://nphies.sa/terminology/CodeSystem/claim-subtype"
+code: "op"
+}
+]
+}
+use: "claim"
+patient: {
+reference: "http://his.nhtc.com.sa/Patient/491"
+}
+created: "2024-12-04"
+insurer: {
+reference: "http://his.nhtc.com.sa/Organization/Ins2"
+}
+provider: {
+reference: "http://his.nhtc.com.sa/Organization/Prov50"
+}
+priority: {
+coding: [
+{
+system: "http://terminology.hl7.org/CodeSystem/processpriority"
+code: "normal"
+}
+]
+}
+payee: {
+type: {
+coding: [
+{
+system: "http://terminology.hl7.org/CodeSystem/payeetype"
+code: "provider"
+}
+]
+}
+}
+careTeam: [
+{
+sequence: 1
+provider: {
+reference: "http://his.nhtc.com.sa/Practitioner/30"
+}
+role: {
+coding: [
+{
+system: "http://terminology.hl7.org/CodeSystem/claimcareteamrole"
+code: "primary"
+}
+]
+}
+qualification: {
+coding: [
+{
+system: "http://nphies.sa/terminology/CodeSystem/practice-codes"
+code: "01.03"
+}
+]
+}
+}
+]
+supportingInfo: [
+{
+sequence: 1
+category: {
+coding: [
+{
+system: "http://nphies.sa/terminology/CodeSystem/claim-information-category"
+code: "reason-for-visit"
+}
+]
+}
+code: {
+coding: [
+{
+system: "http://nphies.sa/terminology/CodeSystem/visit-reason"
+code: "new-visit"
+}
+]
+}
+}
+{
+sequence: 2
+category: {
+coding: [
+{
+system: "http://nphies.sa/terminology/CodeSystem/claim-information-category"
+code: "vital-sign-diastolic"
+}
+]
+}
+valueQuantity: {
+value: 80
+system: "http://unitsofmeasure.org"
+code: "mm[Hg]"
+}
+}
+{
+sequence: 3
+category: {
+coding: [
+{
+system: "http://nphies.sa/terminology/CodeSystem/claim-information-category"
+code: "vital-sign-systolic"
+}
+]
+}
+valueQuantity: {
+value: 30
+system: "http://unitsofmeasure.org"
+code: "mm[Hg]"
+}
+}
+{
+sequence: 4
+category: {
+coding: [
+{
+system: "http://nphies.sa/terminology/CodeSystem/claim-information-category"
+code: "vital-sign-height"
+}
+]
+}
+valueQuantity: {
+value: 167
+system: "http://unitsofmeasure.org"
+code: "cm"
+}
+}
+{
+sequence: 5
+category: {
+coding: [
+{
+system: "http://nphies.sa/terminology/CodeSystem/claim-information-category"
+code: "vital-sign-weight"
+}
+]
+}
+valueQuantity: {
+value: 65
+system: "http://unitsofmeasure.org"
+code: "kg"
+}
+}
+{
+sequence: 6
+category: {
+coding: [
+{
+system: "http://nphies.sa/terminology/CodeSystem/claim-information-category"
+code: "pulse"
+}
+]
+}
+valueQuantity: {
+value: 92
+system: "http://unitsofmeasure.org"
+code: "/min"
+}
+}
+{
+sequence: 7
+category: {
+coding: [
+{
+system: "http://nphies.sa/terminology/CodeSystem/claim-information-category"
+code: "temperature"
+}
+]
+}
+valueQuantity: {
+value: 37
+system: "http://unitsofmeasure.org"
+code: "Cel"
+}
+}
+{
+sequence: 8
+category: {
+coding: [
+{
+system: "http://nphies.sa/terminology/CodeSystem/claim-information-category"
+code: "respiratory-rate"
+}
+]
+}
+valueQuantity: {
+value: 18
+system: "http://unitsofmeasure.org"
+code: "/min"
+}
+}
+{
+sequence: 9
+category: {
+coding: [
+{
+system: "http://nphies.sa/terminology/CodeSystem/claim-information-category"
+code: "oxygen-saturation"
+}
+]
+}
+valueQuantity: {
+value: 99
+system: "http://unitsofmeasure.org"
+code: "%"
+}
+}
+{
+sequence: 10
+category: {
+coding: [
+{
+system: "http://nphies.sa/terminology/CodeSystem/claim-information-category"
+code: "chief-complaint"
+}
+]
+}
+code: {
+coding: [
+{
+system: "http://hl7.org/fhir/sid/icd-10-am"
+code: "A01.0"
+}
+]
+text: "fever"
+}
+valueString: "fever"
+}
+{
+sequence: 11
+category: {
+coding: [
+{
+system: "http://nphies.sa/terminology/CodeSystem/claim-information-category"
+code: "patient-history"
+}
+]
+}
+valueString: "No History"
+}
+{
+sequence: 12
+category: {
+coding: [
+{
+system: "http://nphies.sa/terminology/CodeSystem/claim-information-category"
+code: "treatment-plan"
+}
+]
+}
+valueString: "Treatment Plan"
+}
+{
+sequence: 13
+category: {
+coding: [
+{
+system: "http://nphies.sa/terminology/CodeSystem/claim-information-category"
+code: "physical-examination"
+}
+]
+}
+valueString: "No examination"
+}
+{
+sequence: 14
+category: {
+coding: [
+{
+system: "http://nphies.sa/terminology/CodeSystem/claim-information-category"
+code: "history-of-present-illness"
+}
+]
+}
+valueString: "No history"
+}
+{
+sequence: 15
+category: {
+coding: [
+{
+system: "http://nphies.sa/terminology/CodeSystem/claim-information-category"
+code: "investigation-result"
+}
+]
+}
+code: {
+coding: [
+{
+system: "http://nphies.sa/terminology/CodeSystem/investigation-result"
+code: "INP"
+display: "Investigation(s) not performed"
+}
+]
+}
+}
+]
+diagnosis: [
+{
+sequence: 1
+diagnosisCodeableConcept: {
+coding: [
+{
+system: "http://hl7.org/fhir/sid/icd-10-am"
+code: "A01.0"
+}
+]
+}
+type: [
+{
+coding: [
+{
+system: "http://nphies.sa/terminology/CodeSystem/diagnosis-type"
+code: "principal"
+}
+]
+}
+]
+}
+]
+insurance: [
+{
+sequence: 1
+focal: true
+coverage: {
+reference: "http://his.nhtc.com.sa/Coverage/430"
+}
+}
+]
+item: [
+{
+extension: [
+{
+url: "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/extension-maternity"
+valueBoolean: false
+}
+{
+url: "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/extension-package"
+valueBoolean: false
+}
+{
+url: "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/extension-patient-share"
+valueMoney: {
+value: 18
+currency: "SAR"
+}
+}
+{
+url: "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/extension-patientInvoice"
+valueIdentifier: {
+system: "http://his.nhtc.com.sa/VisitInvoice"
+value: "CL00000311"
+}
+}
+{
+url: "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/extension-tax"
+valueMoney: {
+value: 4.3
+currency: "SAR"
+}
+}
+]
+sequence: 1
+
+diagnosisSequence: [
+0: 1
+]
+informationSequence: [
+0: 1
+]
+productOrService: {
+coding: [
+{
+system: "http://nphies.sa/terminology/CodeSystem/services"
+code: "83600-00-00"
+display: "General Practitioner consult"
+}
+]
+}
+servicedDate: "2024-12-04"
+quantity: {
+value: 1
+}
+unitPrice: {
+value: 100
+currency: "SAR"
+}
+net: {
+value: 104.3
+currency: "SAR"
+}
+}
+]
+total: {
+value: 104.3
+currency: "SAR"
+}
+}
+}
+{
+fullUrl: "http://his.nhtc.com.sa/Patient/491"
+resource: {
+resourceType: "Patient"
+id: "491"
+meta: {
+profile: [
+0: "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/patient|1.0.0"
+]
+}
+extension: [
+{
+url: "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/extension-occupation"
+valueCodeableConcept: {
+coding: [
+{
+system: "http://nphies.sa/terminology/CodeSystem/occupation"
+code: "business"
+}
+]
+}
+}
+]
+identifier: [
+{
+type: {
+coding: [
+{
+system: "http://terminology.hl7.org/CodeSystem/v2-0203"
+code: "PRC"
+display: "Permanent Resident Card Number"
+}
+]
+}
+system: "http://nphies.sa/identifier/iqama"
+value: "2555555765"
+}
+]
+active: true
+name: [
+{
+use: "official"
+text: "Ahad Abu Muhammad"
+family: "Muhammad"
+given: [
+0: "Abu"
+1: "Muhammad"
+]
+}
+]
+telecom: [
+{
+system: "phone"
+value: "+966 54 323 2222"
+}
+]
+gender: "male"
+_gender: {
+extension: [
+{
+url: "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/extension-ksa-administrative-gender"
+valueCodeableConcept: {
+coding: [
+{
+system: "http://nphies.sa/terminology/CodeSystem/ksa-administrative-gender"
+code: "male"
+display: "male"
+}
+]
+}
+}
+]
+}
+birthDate: "1970-12-04"
+maritalStatus: {
+coding: [
+{
+system: "http://terminology.hl7.org/CodeSystem/v3-MaritalStatus"
+code: "M"
+}
+]
+}
+}
+}
+{
+fullUrl: "http://his.nhtc.com.sa/Coverage/430"
+resource: {
+resourceType: "Coverage"
+id: "430"
+meta: {
+profile: [
+0: "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/coverage|1.0.0"
+]
+}
+identifier: [
+{
+system: "http://sni.com.sa/memberid"
+value: "212121"
+}
+]
+status: "active"
+type: {
+coding: [
+{
+system: "http://nphies.sa/terminology/CodeSystem/coverage-type"
+code: "EHCPOL"
+display: "extended healthcare"
+}
+]
+}
+policyHolder: {
+reference: "http://his.nhtc.com.sa/Patient/491"
+}
+subscriber: {
+reference: "http://his.nhtc.com.sa/Patient/491"
+}
+beneficiary: {
+reference: "http://his.nhtc.com.sa/Patient/491"
+}
+relationship: {
+coding: [
+{
+system: "http://terminology.hl7.org/CodeSystem/subscriber-relationship"
+code: "self"
+display: "Self"
+}
+]
+}
+period: {
+start: "2024-12-01"
+end: "2025-12-04"
+}
+payor: [
+{
+reference: "http://his.nhtc.com.sa/Organization/Ins2"
+}
+]
+class: [
+{
+type: {
+coding: [
+{
+system: "http://terminology.hl7.org/CodeSystem/coverage-class"
+code: "plan"
+}
+]
+}
+value: "INS-FHIR"
+name: "Plan A"
+}
+]
+network: "INS"
+}
+}
+{
+fullUrl: "http://his.nhtc.com.sa/Practitioner/30"
+resource: {
+resourceType: "Practitioner"
+id: "30"
+meta: {
+profile: [
+0: "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/practitioner|1.0.0"
+]
+}
+identifier: [
+{
+type: {
+coding: [
+{
+system: "http://terminology.hl7.org/CodeSystem/v2-0203"
+code: "MD"
+}
+]
+}
+system: "http://nphies.sa/license/practitioner-license"
+value: "54545454"
+}
+]
+active: true
+name: [
+{
+use: "official"
+text: "Muhammad Waheed raza"
+family: "raza"
+given: [
+0: "Muhammad"
+1: "Waheed"
+]
+}
+]
+}
+}
+{
+fullUrl: "http://his.nhtc.com.sa/Organization/Prov50"
+resource: {
+resourceType: "Organization"
+id: "Prov50"
+meta: {
+profile: [
+0: "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/provider-organization|1.0.0"
+]
+}
+extension: [
+{
+url: "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/extension-provider-type"
+valueCodeableConcept: {
+coding: [
+{
+system: "http://nphies.sa/terminology/CodeSystem/provider-type"
+code: "1"
+display: "Hospital"
+}
+]
+}
+}
+]
+identifier: [
+{
+system: "http://nphies.sa/license/provider-license"
+value: "1010059725"
+}
+]
+active: true
+type: [
+{
+coding: [
+{
+system: "http://nphies.sa/terminology/CodeSystem/organization-type"
+code: "prov"
+}
+]
+}
+]
+name: "Arabic Computer System"
+}
+}
+{
+fullUrl: "http://his.nhtc.com.sa/Organization/Ins2"
+resource: {
+resourceType: "Organization"
+id: "Ins2"
+meta: {
+profile: [
+0: "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/insurer-organization|1.0.0"
+]
+}
+identifier: [
+{
+system: "http://nphies.sa/license/payer-license"
+value: "INS-FHIR"
+}
+]
+active: true
+type: [
+{
+coding: [
+{
+system: "http://nphies.sa/terminology/CodeSystem/organization-type"
+code: "ins"
+}
+]
+}
+]
+name: "INS-FHIR"
+}
+}
+{
+fullUrl: "http://his.nhtc.com.sa/Encounter/30"
+resource: {
+resourceType: "Encounter"
+id: "30"
+meta: {
+profile: [
+0: "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/encounter|1.0.0"
+]
+}
+extension: [
+{
+url: "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/extension-serviceEventType"
+valueCodeableConcept: {
+coding: [
+{
+system: "http://nphies.sa/terminology/CodeSystem/service-event-type"
+code: "ICSE"
+display: "Initial client service event"
+}
+]
+}
+}
+]
+identifier: [
+{
+system: "http://his.nhtc.com.sa/Visit"
+value: "100547"
+}
+]
+status: "arrived"
+class: {
+system: "http://terminology.hl7.org/CodeSystem/v3-ActCode"
+code: "AMB"
+}
+serviceType: {
+coding: [
+{
+system: "http://nphies.sa/terminology/CodeSystem/service-type"
+code: "acute-care"
+}
+]
+}
+priority: {
+coding: [
+{
+system: "http://terminology.hl7.org/CodeSystem/v3-ActPriority"
+code: "EL"
+}
+]
+}
+subject: {
+reference: "http://his.nhtc.com.sa/Patient/491"
+}
+period: {
+start: "2024-12-04T00:00:00+03:00"
+end: "2024-12-04T00:00:00+03:00"
+}
+serviceProvider: {
+reference: "http://his.nhtc.com.sa/Organization/Prov50"
+}
+}
+}
+]
+}

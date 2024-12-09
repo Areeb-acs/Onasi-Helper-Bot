@@ -13,7 +13,7 @@ from langchain.chains.history_aware_retriever import create_history_aware_retrie
 from langchain.prompts import ChatPromptTemplate
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_groq import ChatGroq
-
+from .sql_queries import generate_sql_query_business_validation, generate_sql_query_medical_coding, fetch_query_results
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 import json
 import pyodbc
@@ -21,7 +21,6 @@ import json
 import os
 import os
 import pyodbc
-
 
 
 
@@ -60,6 +59,7 @@ def format_chat_history(chat_history):
     return formatted_history.strip()
 
 
+
 def run_llm(query: str, chat_history, chat, docsearch, domain=None):
     """
     Main pipeline for processing user queries with priority for FAQ / QA domain.
@@ -75,97 +75,12 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         str: AI-generated response based on the query and context.
     """
 
-    import time
-
-    # Start total timer
-    total_start = time.time()
-            # ------------------------------
-    embedding_start = time.time()
-    # Detect Summarization or Reword Requests
-    # is_summary_request = any(keyword in query.lower() for keyword in ["summarize", "summarise", "reword", "parahparse"])
-    is_summary_request = False
-    if is_summary_request:
-            # Create the system message
-
-        # Create the prompt template
-        # summary_prompt = ChatPromptTemplate.from_template(
-        #     """
-        #     You are a helpful assistant. The user has asked for a summarization or rewording of the latest context.
-        #     Use ONLY the provided chat history to create your response. Do not include additional information.
-        #     Please output a summary in your own words neatly summarizing the AI response only.
-        #     Please only use the last line to use as information only.
-
-        #     ALWAYS OUTPUT in <html> elements but never use the <html> tag itself.
-        #     <b>Instructions:</b>
-        #     - Summarize or reword the provided context as requested.
-        #     - Use clear and concise language.
-        #     - Respond with bullet points if necessary but do not include additional explanations.
-        #     - Create sub-bullet points as well using nested <ul> tags for better readability.
-        #     - There is a line break after each bullet point for better readability.
-        #     - Avoid markdown; always format output in clean HTML (no <html> tag).
-            
-        #     - If the context is irrelevant or insufficient, reply with "I don't know."
-        #     - Never hallucinate information; use the provided chat history only.
-        #     - Respond with detailed explanations when required but always concise.
-        #     - Respond with bullet points when the answer is longer than 2 sentences.
-
-        #     <b>Current Query:</b> {input}
-        #     <b>Conversation History:</b> {chat_history}
-        #     """
-        # )
-        # ------------------------------
-        # 1. Embedding Retrieval
-
-        # Format the prompt with the input query and chat history
-        formatted_prompt = summary_prompt.format(
-            input=query,
-            chat_history=chat_history  # Ensure this is properly formatted text
-        )
-
-        try:
-            # Call the ChatGroq API
-            response = chat.invoke(formatted_prompt)  # Ensure correct method for the library being used
-
-            # Extract the content from the response object
-            if hasattr(response, "content"):
-                result = response.content  # Access content attribute (adjust if needed)
-            elif hasattr(response, "text"):
-                result = response.text  # Alternative access point if applicable
-            else:
-                raise AttributeError("Response object does not have 'content' or 'text' attributes.")
-
-            return result  # Return the extracted result
-
-        except Exception as e:
-            logging.error(f"Error generating response: {str(e)}")
-            return "An error occurred while generating the response."
+    # Initialize context flag
+    database_context_provided = False
+    database_context = ""
 
 
-    # ------------------------------
-    # Proceed with the Standard QA Flow
-    # ------------------------------
-    # ------------------------------
-    # 1. Setup Document Retriever
-    # ------------------------------
-    # Use a default retriever if no domain is specified.
-    if not domain:
-        domain_retriever = docsearch.as_retriever(
-            search_kwargs={
-                "filter": {},  # No filter applied for global search.
-                "k": 3  # Retrieve top 7 results.
-            }
-        )
-    else:
-        # Use domain-specific filtering for more focused results.
-        domain_retriever = docsearch.as_retriever(
-            search_kwargs={
-                "filter": {"domain": domain},  # Apply domain-specific filter.
-                "k": 3  # Retrieve top 10 results.
-            }
-        )
-        
 
-    # ------------------------------
     # 2. Define Chat Prompts
     # ------------------------------
     # Prompt for contextual retrieval-based QA.
@@ -190,6 +105,7 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         - If the user asks to summarize or reword content, rely solely on the provided context and chat history.
         - Avoid going out of context when summarizing or rewording.
         - If the user's query is irrelevant to the context, say: "Sorry, I cannot help with your query."
+        - Please always output response in plain english simple to understand to the user. 
 
         <b>Main Instructions:</b>
         - Use bullet points (<ul> and <li>) to structure responses longer than two sentences.
@@ -210,6 +126,89 @@ def run_llm(query: str, chat_history, chat, docsearch, domain=None):
         <b>Current Query:</b> {input}
         """
     )
+
+
+    # ---------------------
+    # Pattern 1: Business Validation Rules
+    # ---------------------
+    business_rule_pattern = r"\b(BV|DT|FR|GE|IB|IC|RE)-\d{5}\b|(?i)\b(business validation rule|error|validation error|validation rule)\b"
+    if re.search(business_rule_pattern, query):
+        try:
+            # Generate SQL query for the matching validation rule
+            sql_query = generate_sql_query_business_validation(query)  # Replace with actual implementation
+            # Fetch results from the database
+            results = fetch_query_results(sql_query)  # Replace with actual implementation
+            
+            if results:
+                database_context_provided = True
+                database_context = f"Business Validation Rule Results:\n{results}"
+                query = f"{query}\n\n{database_context}"
+            else:
+                return "Sorry, no relevant data found for the specified business validation rule."
+        except Exception as e:
+            return f"An error occurred while processing the business validation rule: {str(e)}"
+
+    # ---------------------
+    # Pattern 2: Medical Codes and Descriptions
+    # ---------------------
+    medical_code_pattern = r"(?i)\b(Medical Care|Endodontics|Dental Care|codevalue|code value|code display value|description|explain codevalue|explain code)\b"
+    code_value_pattern = r"\b(\d+(\.\d+)?|[A-Z]-\w+-\d+)\b"
+
+    if re.search(medical_code_pattern, query) or re.search(code_value_pattern, query):
+        try:
+            # Generate SQL query for medical codes and descriptions
+            sql_query = generate_sql_query_medical_coding(query)  # Replace with actual implementation
+            # Fetch results from the database
+            results = fetch_query_results(sql_query)  # Replace with actual implementation
+            
+            if results:
+                database_context_provided = True
+                database_context = f"Medical Coding Results:\n{results}"
+                query = f"{query}\n\n{database_context}"
+            else:
+                return "Sorry, no relevant data found for the specified medical code or description."
+        except Exception as e:
+            return f"An error occurred while processing the medical code or description: {str(e)}"
+
+    # ------------------------------
+    # If data was retrieved from the database, skip retriever setup
+    # ------------------------------
+    if database_context_provided:
+        formatted_prompt = retrieval_qa_chat_prompt.format(
+            context=database_context,
+            chat_history=chat_history,
+            input=query
+        )
+
+        response = chat.invoke(formatted_prompt)  # Generate the response
+        return response
+    
+    # ------------------------------
+    # Proceed with the Standard QA Flow
+    # ------------------------------
+    # ------------------------------
+    # 1. Setup Document Retriever
+    # ------------------------------
+    # Use a default retriever if no domain is specified.
+    if not domain:
+        domain_retriever = docsearch.as_retriever(
+            search_kwargs={
+                "filter": {},  # No filter applied for global search.
+                "k": 4  # Retrieve top 7 results.   
+            }
+        )
+    else:
+        # Use domain-specific filtering for more focused results.
+        domain_retriever = docsearch.as_retriever(
+            search_kwargs={
+                "filter": {"domain": domain},  # Apply domain-specific filter.
+                "k": 3  # Retrieve top 10 results.
+            }
+        )
+        
+
+    # ------------------------------
+
 
     # Prompt for rephrasing follow-up questions into standalone queries.
     rephrase_prompt = ChatPromptTemplate.from_template(
