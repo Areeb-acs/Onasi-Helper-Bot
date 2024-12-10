@@ -9,9 +9,10 @@ import requests
 import base64
 import logging
 from uuid import uuid4  # For generating unique session IDs
-from langchain_pinecone import Pinecone
+# from langchain_pinecone import Pinecone
 from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain.vectorstores import FAISS
 
 import requests
 
@@ -37,13 +38,21 @@ session_chat_histories = {}
 
 
 # BUCKET_NAME = "onasi-chatbot"
-# FILE_URL = "https://onasi-chatbot.s3.us-east-1.amazonaws.com/conversations.txt"
+# FILE_URL = "conversation.txt"
 INDEX_NAME = "rcm-final-app"
 embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")
 
 groq_api_key = os.getenv("GROQ_API_KEY")
 # Initialize Pinecone
-docsearch = Pinecone(index_name=INDEX_NAME, embedding=embeddings)
+
+# Load the FAISS index
+faiss_index_path = "faiss_index"  # Path to your FAISS index directory
+docsearch = FAISS.load_local(
+    folder_path=faiss_index_path,
+    embeddings=embeddings,
+    allow_dangerous_deserialization=True
+)# Create a retriever from the FAISS vector store
+# docsearch = Pinecone(index_name=INDEX_NAME, embedding=embeddings)
 
 
 def update_local_file(new_content, file_path="conversation.txt"):
@@ -124,7 +133,7 @@ groq_api_key = os.getenv("GROQ_API_KEY")
 chat = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-70b-8192")
 
 # Preinitialize docsearch (can be reused across multiple queries)
-docsearch = Pinecone(index_name=INDEX_NAME, embedding=embeddings)
+# docsearch = Pinecone(index_name=INDEX_NAME, embedding=embeddings)
 
 # HTML formatting prompt template
 HTML_PROMPT_TEMPLATE = """
@@ -142,26 +151,27 @@ with open("./faq_data.json", "r") as f:
 
 
 
-def get_conversation_by_session_id(session_id, recent_count=4):
+def get_conversation_by_session_id(session_id, recent_count=4, file_path="conversation.txt"):
     """
-    Fetches the last few user queries and AI responses for a specific session ID.
+    Fetches the last few user queries and AI responses for a specific session ID from a local file.
 
     Args:
         session_id (str): The session ID to filter conversations by.
         recent_count (int): Number of most recent conversations to return.
+        file_path (str): Path to the local conversation file.
 
     Returns:
         List[dict]: A list of the last `recent_count` conversations in the format:
                     [{"user": "question1", "ai": "response1"}, ...]
     """
     try:
-        # Fetch the content of the file from the S3 bucket
-        response = requests.get(FILE_URL)
-        if response.status_code != 200:
-            logging.error(f"Failed to fetch conversation file: {response.status_code}")
+        # Read the content of the file
+        try:
+            with open(file_path, "r") as file:
+                content = file.read()
+        except FileNotFoundError:
+            logging.error(f"File not found: {file_path}")
             return []
-
-        content = response.text
 
         # Check if the session ID exists
         session_marker = f"New Session Initialized: {session_id}"

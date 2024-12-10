@@ -7,3 +7,6 @@
 /Text Files
 /PDF_Docs
 conversation.txt
+*.faiss
+*.pkl
+/faiss_index

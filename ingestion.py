@@ -5,15 +5,16 @@ from langchain_community.document_loaders import PyPDFLoader
 import pandas as pd
 import json
 from langchain_openai import OpenAIEmbeddings
-from langchain_pinecone import PineconeVectorStore
+# from langchain_pinecone import PineconeVectorStore
 import os
 from pinecone import Pinecone, ServerlessSpec
+from langchain.vectorstores import FAISS
 
 # Load environment variables from .env file
 load_dotenv()
 
 # Create an instance of the Pinecone class
-pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
+# pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 
 # Check if the index exists, and create it if it doesn't
 index_name = "rcm-final-app"  # Your index name
@@ -21,7 +22,7 @@ index_name = "rcm-final-app"  # Your index name
 embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")  # Specify the model you want to use
 
 # Now create the PineconeVectorStore with the embedding model
-vector_store = PineconeVectorStore(index_name=index_name, embedding=embeddings)  # Pass the embedding model
+# vector_store = PineconeVectorStore(index_name=index_name, embedding=embeddings)  # Pass the embedding model
 
 def load_json_documents(folder_path):
     """
@@ -226,11 +227,63 @@ def ingest_docs():
         print(f"Document Metadata: {doc.metadata}, Content Length: {len(doc.page_content)}")
 
     # Index documents in Pinecone using PineconeVectorStore
-    PineconeVectorStore.from_documents(
-        split_documents, embeddings, index_name="rcm-final-app"
-    )
+    # PineconeVectorStore.from_documents(
+    #     split_documents, embeddings, index_name="rcm-final-app"
+    # )
 
     print("****Loading to vectorstore done ****")
+    
+    
+def ingest_docs_faiss():
+    # Load PDF files
+    rcm_pdf_folder_path = "./PDF_Docs/RCM Docs"
+    dhis_pdf_folder_path = "./PDF_Docs/DHIS Docs"
+
+    rcm_pdf_documents = load_pdf_documents(rcm_pdf_folder_path, domain="RCM")
+    dhis_pdf_documents = load_pdf_documents(dhis_pdf_folder_path, domain="DHIS")
+
+    pdf_documents = rcm_pdf_documents + dhis_pdf_documents
+    print(f"Combined PDF documents from RCM and DHIS: {len(pdf_documents)} documents loaded.")
+
+    # Load JSON Files
+    json_folder_path = "./JSON_Documents"
+    json_documents = load_json_documents(json_folder_path)
+
+    faq_file_path = "./JSON_Documents/faq_data.json"
+    faq_documents = load_faq_documents(faq_file_path)
+
+    # Combine all documents
+    all_documents = pdf_documents + json_documents + faq_documents
+
+    # Split PDF documents into chunks using RecursiveCharacterTextSplitter
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1200, chunk_overlap=200)  # Reduce chunk size
+
+    split_documents = []
+    for doc in all_documents:
+        if doc.metadata.get("file_type") in ["coding", "validation"]:
+            # JSON documents: No chunking, add as-is
+            split_documents.append(doc)
+        elif doc.metadata.get("file_type") == "faq":
+            # FAQ documents: Add directly without any processing
+            split_documents.append(doc)
+        else:
+            # For non-JSON documents (e.g., PDFs), use the splitter
+            split_documents.extend(text_splitter.split_documents([doc]))
+
+    print(f"Going to add {len(split_documents)} documents to FAISS")
+    for doc in split_documents:
+        print(f"Document Metadata: {doc.metadata}, Content Length: {len(doc.page_content)}")
+
+    # Initialize embeddings
+    embeddings = OpenAIEmbeddings()  # Replace with your embeddings provider
+
+    # Index documents in FAISS
+    vectorstore = FAISS.from_documents(split_documents, embeddings)
+
+    # Save FAISS index locally
+    vectorstore.save_local("faiss_index")
+
+    print("****Loading to FAISS vectorstore done ****")
 
 if __name__ == "__main__":
-    ingest_docs()
+    ingest_docs_faiss()
