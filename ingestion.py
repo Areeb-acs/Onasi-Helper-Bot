@@ -247,16 +247,16 @@ def ingest_docs_faiss():
 
     # Load JSON Files
     json_folder_path = "./JSON_Documents"
-    json_documents = load_json_documents(json_folder_path)
+    # json_documents = load_json_documents(json_folder_path)
 
     faq_file_path = "./JSON_Documents/faq_data.json"
-    faq_documents = load_faq_documents(faq_file_path)
+    # faq_documents = load_faq_documents(faq_file_path)
 
     # Combine all documents
-    all_documents = pdf_documents + json_documents + faq_documents
+    all_documents = pdf_documents
 
     # Split PDF documents into chunks using RecursiveCharacterTextSplitter
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1200, chunk_overlap=200)  # Reduce chunk size
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=300)  # Reduce chunk size
 
     split_documents = []
     for doc in all_documents:

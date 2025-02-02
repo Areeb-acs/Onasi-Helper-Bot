@@ -226,6 +226,31 @@ def generate_sql_query_medical_coding(query: str):
 
 
 
+def fetch_code_display_value(code: str):
+    """
+    Fetch the CodeDisplayValue for a given CodeValue.
+    
+    Args:
+        code (str): The CodeValue to search for.
+    
+    Returns:
+        str: The CodeDisplayValue associated with the CodeValue, or an error message.
+    """
+    # Define the SQL query
+    sql_query = f"SELECT CodeDisplayValue FROM Sys_Codes WHERE CodeValue = {code}"
+
+    # Fetch the query result
+    result = fetch_query_results(sql_query)
+
+    # Parse and return the CodeDisplayValue from the result
+    try:
+        result_json = json.loads(result)
+        if result_json and isinstance(result_json, list) and "CodeDisplayValue" in result_json[0]:
+            return result_json[0]["CodeDisplayValue"]
+        else:
+            return f"No CodeDisplayValue found for CodeValue: {code}"
+    except json.JSONDecodeError as e:
+        return f"Error parsing result: {e}"
 
 
 
